@@ -3,8 +3,7 @@ const supabaseClient = supabase.createClient('https://hdturwmfbkbcwdyyfzao.supab
 const loginBtn = document.getElementById('login-btn');
 const signupBtn = document.getElementById('signup-btn');
 const saveProfileBtn = document.getElementById('save-profile');
-const searchBtn = document.getElementById('search-btn');
-const backBtn = document.getElementById('back-btn');
+const pageSelect = document.getElementById('page-select');
 
 function showMessage(msg) {
   const box = document.getElementById('message-box');
@@ -44,60 +43,52 @@ saveProfileBtn.addEventListener('click', async () => {
   if (error) showMessage(error.message);
   else {
     showMessage("Profil gespeichert!");
-    if (role.value === 'owner') {
-      document.getElementById('search-section').classList.remove('hidden');
-      loadSitters();
-    }
+    loadUsers();
+    loadSitters();
   }
 });
 
-searchBtn.addEventListener('click', () => {
-  loadSitters(
-    document.getElementById('search-location').value,
-    document.getElementById('search-pet').value
-  );
-});
-
-backBtn.addEventListener('click', () => {
-  document.getElementById('profile-detail').classList.add('hidden');
-  document.getElementById('search-section').classList.remove('hidden');
+pageSelect.addEventListener('change', () => {
+  document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+  document.getElementById(pageSelect.value).classList.remove('hidden');
 });
 
 async function loadUser() {
   const user = (await supabaseClient.auth.getUser()).data.user;
   if (!user) return;
   document.getElementById('auth-section').classList.add('hidden');
-  document.getElementById('profile-section').classList.remove('hidden');
+  document.getElementById('page-select').classList.remove('hidden');
+  document.getElementById('profile-page').classList.remove('hidden');
+  loadUsers();
+  loadSitters();
 }
 
-async function loadSitters(locationFilter = "", petFilter = "") {
-  const { data, error } = await supabaseClient
+async function loadUsers() {
+  const { data } = await supabaseClient
+    .from('profiles')
+    .select('*')
+    .eq('role', 'owner');
+
+  const list = document.getElementById('users-list');
+  list.innerHTML = '';
+  data.forEach(user => {
+    const li = document.createElement('li');
+    li.textContent = `🐶 ${user.pet_type} | ${user.gender}, ${user.age} Jahre aus ${user.location}`;
+    list.appendChild(li);
+  });
+}
+
+async function loadSitters() {
+  const { data } = await supabaseClient
     .from('profiles')
     .select('*')
     .eq('role', 'sitter');
 
-  const sitterList = document.getElementById('sitter-list');
-  sitterList.innerHTML = '';
-
-  data
-    .filter(sitter =>
-      sitter.location.toLowerCase().includes(locationFilter.toLowerCase()) &&
-      sitter.pet_type.toLowerCase().includes(petFilter.toLowerCase())
-    )
-    .forEach(sitter => {
-      const li = document.createElement('li');
-      li.textContent = `${sitter.pet_type} Sitter in ${sitter.location} (${sitter.gender}, ${sitter.age} Jahre)`;
-      li.addEventListener('click', () => showProfileDetail(sitter));
-      sitterList.appendChild(li);
-    });
-}
-
-function showProfileDetail(profile) {
-  document.getElementById('search-section').classList.add('hidden');
-  document.getElementById('profile-detail').classList.remove('hidden');
-
-  document.getElementById('detail-age').textContent = `Alter: ${profile.age}`;
-  document.getElementById('detail-location').textContent = `Ort: ${profile.location}`;
-  document.getElementById('detail-gender').textContent = `Geschlecht: ${profile.gender}`;
-  document.getElementById('detail-pet').textContent = `Tierart: ${profile.pet_type}`;
+  const list = document.getElementById('sitters-list');
+  list.innerHTML = '';
+  data.forEach(user => {
+    const li = document.createElement('li');
+    li.textContent = `🧍 Anbieter für ${user.pet_type} in ${user.location} (${user.gender}, ${user.age})`;
+    list.appendChild(li);
+  });
 }
