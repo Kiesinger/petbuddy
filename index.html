@@ -2,16 +2,18 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Petbuddy</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
   <div class="container">
     <img src="logo.png" alt="Petbuddy Logo" class="logo" />
-
     <h1>Petbuddy</h1>
 
+    <div id="message-box" class="hidden"></div>
+
+    <!-- Auth Section -->
     <div id="auth-section">
       <input type="email" id="email" placeholder="Email" />
       <input type="password" id="password" placeholder="Passwort" />
@@ -19,8 +21,9 @@
       <button id="signup-btn">Registrieren</button>
     </div>
 
+    <!-- Profile Form -->
     <div id="profile-section" class="hidden">
-      <h2>Profil</h2>
+      <h2>Profil erstellen</h2>
       <input type="text" id="age" placeholder="Alter" />
       <input type="text" id="location" placeholder="Ort" />
       <select id="gender">
@@ -38,9 +41,23 @@
       <button id="save-profile">Profil speichern</button>
     </div>
 
-    <div id="match-section" class="hidden">
-      <h2>Verfügbare Sitter</h2>
+    <!-- Search -->
+    <div id="search-section" class="hidden">
+      <h2>Sitter finden</h2>
+      <input type="text" id="search-location" placeholder="Ort suchen..." />
+      <input type="text" id="search-pet" placeholder="Tierart suchen..." />
+      <button id="search-btn">Suchen</button>
       <ul id="sitter-list"></ul>
+    </div>
+
+    <!-- Anbieter Detail -->
+    <div id="profile-detail" class="hidden">
+      <h2>Anbieter Profil</h2>
+      <p id="detail-age"></p>
+      <p id="detail-location"></p>
+      <p id="detail-gender"></p>
+      <p id="detail-pet"></p>
+      <button id="back-btn">Zurück zur Liste</button>
     </div>
   </div>
 
