@@ -32,19 +32,20 @@ body {
   display: block;
 }
 
-h1, h2 {
+h1, h2, h3 {
   text-align: center;
   color: var(--primary-dark);
   margin-bottom: 1rem;
 }
 
-input, select, button {
+input, select, textarea, button {
   width: 100%;
   padding: 0.75rem;
   margin: 0.5rem 0;
   font-size: 1rem;
   border-radius: var(--border-radius);
   border: 1px solid #ccc;
+  box-sizing: border-box;
 }
 
 button {
@@ -93,4 +94,27 @@ ul li {
   padding: 1rem;
   border-radius: var(--border-radius);
   margin-bottom: 0.75rem;
+  position: relative;
+}
+
+ul li img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.delete-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: crimson;
+  color: white;
+  border: none;
+  padding: 0.3rem 0.6rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  background: darkred;
 }
