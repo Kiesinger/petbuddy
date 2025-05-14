@@ -70,15 +70,27 @@ button:hover {
   border-radius: var(--border-radius);
 }
 
-ul#sitter-list {
+.nav-dropdown {
+  margin-bottom: 1.5rem;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border-radius: var(--border-radius);
+  border: 1px solid #ccc;
+  width: 100%;
+}
+
+.page {
+  margin-top: 1rem;
+}
+
+ul {
   list-style: none;
   padding: 0;
 }
 
-ul#sitter-list li {
-  padding: 1rem;
+ul li {
   background: #f1f1f1;
+  padding: 1rem;
   border-radius: var(--border-radius);
-  margin-bottom: 1rem;
-  cursor: pointer;
+  margin-bottom: 0.75rem;
 }
