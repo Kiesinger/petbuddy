@@ -78,28 +78,32 @@ petForm.addEventListener('submit', async (e) => {
   let imageUrl = null;
 
   // Upload Bild
-  if (file) {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${crypto.randomUUID()}.${fileExt}`;
-    const filePath = `${currentUserId}/${fileName}`;
+ if (file) {
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${crypto.randomUUID()}.${fileExt}`;
+  const filePath = `${currentUserId}/${fileName}`;
 
-    const { error: uploadError } = await supabaseClient
-      .storage
-      .from('pet-images')
-      .upload(filePath, file);
+  console.log("🐾 Upload wird vorbereitet:", file.name, filePath);
 
-    if (uploadError) {
-      showMessage("Fehler beim Hochladen des Bildes.");
-      return;
-    }
+  const { data, error } = await supabaseClient
+    .storage
+    .from('pet-images')
+    .upload(filePath, file);
 
-    const { data } = supabaseClient
-      .storage
-      .from('pet-images')
-      .getPublicUrl(filePath);
-
-    imageUrl = data.publicUrl;
+  if (error) {
+    console.error("❌ Upload-Fehler:", error);
+    showMessage("Fehler beim Hochladen: " + error.message);
+    return;
   }
+
+  const publicUrl = supabaseClient
+    .storage
+    .from('pet-images')
+    .getPublicUrl(filePath).data.publicUrl;
+
+  imageUrl = publicUrl;
+}
+
 
   // Tier speichern
   const { error } = await supabaseClient.from('pets').insert({
