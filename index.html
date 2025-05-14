@@ -11,9 +11,17 @@
     <img src="logo.png" alt="Petbuddy Logo" class="logo" />
     <h1>Petbuddy</h1>
 
+    <!-- Navigation -->
+    <select id="page-select" class="nav-dropdown hidden">
+      <option value="profile-page">👤 Mein Profil</option>
+      <option value="users-page">🔎 Suchende</option>
+      <option value="sitters-page">🐾 Anbieter</option>
+    </select>
+
+    <!-- Feedback -->
     <div id="message-box" class="hidden"></div>
 
-    <!-- Auth Section -->
+    <!-- Login/Signup -->
     <div id="auth-section">
       <input type="email" id="email" placeholder="Email" />
       <input type="password" id="password" placeholder="Passwort" />
@@ -21,9 +29,9 @@
       <button id="signup-btn">Registrieren</button>
     </div>
 
-    <!-- Profile Form -->
-    <div id="profile-section" class="hidden">
-      <h2>Profil erstellen</h2>
+    <!-- Profil -->
+    <div id="profile-page" class="page hidden">
+      <h2>Mein Profil</h2>
       <input type="text" id="age" placeholder="Alter" />
       <input type="text" id="location" placeholder="Ort" />
       <select id="gender">
@@ -41,23 +49,16 @@
       <button id="save-profile">Profil speichern</button>
     </div>
 
-    <!-- Search -->
-    <div id="search-section" class="hidden">
-      <h2>Sitter finden</h2>
-      <input type="text" id="search-location" placeholder="Ort suchen..." />
-      <input type="text" id="search-pet" placeholder="Tierart suchen..." />
-      <button id="search-btn">Suchen</button>
-      <ul id="sitter-list"></ul>
+    <!-- Nutzerliste -->
+    <div id="users-page" class="page hidden">
+      <h2>Suchende (Nutzer)</h2>
+      <ul id="users-list"></ul>
     </div>
 
-    <!-- Anbieter Detail -->
-    <div id="profile-detail" class="hidden">
-      <h2>Anbieter Profil</h2>
-      <p id="detail-age"></p>
-      <p id="detail-location"></p>
-      <p id="detail-gender"></p>
-      <p id="detail-pet"></p>
-      <button id="back-btn">Zurück zur Liste</button>
+    <!-- Anbieter -->
+    <div id="sitters-page" class="page hidden">
+      <h2>Anbieter (Sitter)</h2>
+      <ul id="sitters-list"></ul>
     </div>
   </div>
 
