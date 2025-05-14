@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meine Supabase App</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <div class="container">
+    <img src="logo.png" alt="Logo" class="logo" />
+
+    <div class="login-form">
+      <h2>Login</h2>
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Passwort" required />
+      <button id="loginBtn">Einloggen</button>
+    </div>
+
+    <div id="userInfo" class="hidden">
+      <p>Willkommen, <span id="userEmail"></span>!</p>
+      <button id="logoutBtn">Logout</button>
+    </div>
+  </div>
+</body>
+</html>
