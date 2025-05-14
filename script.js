@@ -1,5 +1,11 @@
-const supabaseClient = supabase.createClient('https://hdturwmfbkbcwdyyfzao.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkdHVyd21mYmtiY3dkeXlmemFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNTE5NjMsImV4cCI6MjA2MjgyNzk2M30.4skXOC9ojcKNiYo5q0ZkChYyx28z_mkI5CxNz31bofI');
+// Supabase Client initialisieren
+const supabaseClient = supabase.createClient(
+  'https://hdturwmfbkbcwdyyfzao.supabase.co', 
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkdHVyd21mYmtiY3dkeXlmemFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNTE5NjMsImV4cCI6MjA2MjgyNzk2M30.4skXOC9ojcKNiYo5q0ZkChYyx28z_mkI5CxNz31bofI'
+);
 
+
+// UI-Elemente
 const loginBtn = document.getElementById('login-btn');
 const signupBtn = document.getElementById('signup-btn');
 const saveProfileBtn = document.getElementById('save-profile');
@@ -8,6 +14,7 @@ const petForm = document.getElementById('pet-form');
 const petList = document.getElementById('pet-list');
 let currentUserId = null;
 
+// Feedback anzeigen
 function showMessage(msg) {
   const box = document.getElementById('message-box');
   box.textContent = msg;
@@ -15,6 +22,7 @@ function showMessage(msg) {
   setTimeout(() => box.classList.add('hidden'), 4000);
 }
 
+// Login
 loginBtn.addEventListener('click', async () => {
   const { error } = await supabaseClient.auth.signInWithPassword({
     email: email.value,
@@ -24,6 +32,7 @@ loginBtn.addEventListener('click', async () => {
   else loadUser();
 });
 
+// Registrierung
 signupBtn.addEventListener('click', async () => {
   const { error } = await supabaseClient.auth.signUp({
     email: email.value,
@@ -33,6 +42,7 @@ signupBtn.addEventListener('click', async () => {
   else showMessage("Registrierung erfolgreich! Bitte einloggen.");
 });
 
+// Profil speichern
 saveProfileBtn.addEventListener('click', async () => {
   const user = (await supabaseClient.auth.getUser()).data.user;
   const { error } = await supabaseClient.from('profiles').upsert({
@@ -50,6 +60,7 @@ saveProfileBtn.addEventListener('click', async () => {
   }
 });
 
+// Navigation Dropdown
 pageSelect.addEventListener('change', () => {
   document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
   document.getElementById(pageSelect.value).classList.remove('hidden');
@@ -65,6 +76,8 @@ petForm.addEventListener('submit', async (e) => {
   const file = document.getElementById('pet-image').files[0];
 
   let imageUrl = null;
+
+  // Upload Bild
   if (file) {
     const fileExt = file.name.split('.').pop();
     const fileName = `${crypto.randomUUID()}.${fileExt}`;
@@ -84,9 +97,11 @@ petForm.addEventListener('submit', async (e) => {
       .storage
       .from('pet-images')
       .getPublicUrl(filePath);
+
     imageUrl = data.publicUrl;
   }
 
+  // Tier speichern
   const { error } = await supabaseClient.from('pets').insert({
     owner_id: currentUserId,
     name,
@@ -105,6 +120,7 @@ petForm.addEventListener('submit', async (e) => {
   }
 });
 
+// User laden nach Login
 async function loadUser() {
   const user = (await supabaseClient.auth.getUser()).data.user;
   if (!user) return;
@@ -119,6 +135,7 @@ async function loadUser() {
   loadSitters();
 }
 
+// Eigene Tiere laden
 async function loadMyPets() {
   const { data } = await supabaseClient
     .from('pets')
@@ -131,7 +148,7 @@ async function loadMyPets() {
     li.innerHTML = `
       <strong>${pet.name}</strong> (${pet.pet_type}) – ${pet.role}<br/>
       ${pet.description}<br/>
-      ${pet.image_url ? `<img src="${pet.image_url}" alt="Tierbild"/>` : ''}
+      ${pet.image_url ? `<img src="${pet.image_url}" alt="Tierbild" />` : ''}
       <button class="delete-btn" data-id="${pet.id}">🗑️</button>
     `;
     petList.appendChild(li);
@@ -146,6 +163,7 @@ async function loadMyPets() {
   });
 }
 
+// Suchende anzeigen
 async function loadUsers() {
   const { data } = await supabaseClient
     .from('pets')
@@ -165,6 +183,7 @@ async function loadUsers() {
   });
 }
 
+// Anbieter anzeigen
 async function loadSitters() {
   const { data } = await supabaseClient
     .from('pets')
