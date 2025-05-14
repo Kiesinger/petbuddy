@@ -1,11 +1,10 @@
-// Supabase Client initialisieren
+// Supabase initialisieren
 const supabaseClient = supabase.createClient(
   'https://hdturwmfbkbcwdyyfzao.supabase.co', 
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkdHVyd21mYmtiY3dkeXlmemFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNTE5NjMsImV4cCI6MjA2MjgyNzk2M30.4skXOC9ojcKNiYo5q0ZkChYyx28z_mkI5CxNz31bofI'
 );
 
-
-// UI-Elemente
+// DOM Elemente
 const loginBtn = document.getElementById('login-btn');
 const signupBtn = document.getElementById('signup-btn');
 const saveProfileBtn = document.getElementById('save-profile');
@@ -14,7 +13,7 @@ const petForm = document.getElementById('pet-form');
 const petList = document.getElementById('pet-list');
 let currentUserId = null;
 
-// Feedback anzeigen
+// Nachricht anzeigen
 function showMessage(msg) {
   const box = document.getElementById('message-box');
   box.textContent = msg;
@@ -60,7 +59,7 @@ saveProfileBtn.addEventListener('click', async () => {
   }
 });
 
-// Navigation Dropdown
+// Navigation wechseln
 pageSelect.addEventListener('change', () => {
   document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
   document.getElementById(pageSelect.value).classList.remove('hidden');
@@ -69,6 +68,7 @@ pageSelect.addEventListener('change', () => {
 // Tier hinzufügen
 petForm.addEventListener('submit', async (e) => {
   e.preventDefault();
+
   const name = document.getElementById('pet-name').value;
   const type = document.getElementById('pet-type').value;
   const description = document.getElementById('pet-description').value;
@@ -77,35 +77,30 @@ petForm.addEventListener('submit', async (e) => {
 
   let imageUrl = null;
 
-  // Upload Bild
- if (file) {
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${crypto.randomUUID()}.${fileExt}`;
-  const filePath = `${currentUserId}/${fileName}`;
+  if (file) {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${crypto.randomUUID()}.${fileExt}`;
+    const filePath = `${currentUserId}/${fileName}`;
 
-  console.log("🐾 Upload wird vorbereitet:", file.name, filePath);
+    const { error: uploadError } = await supabaseClient
+      .storage
+      .from('pet-images')
+      .upload(filePath, file);
 
-  const { data, error } = await supabaseClient
-    .storage
-    .from('pet-images')
-    .upload(filePath, file);
+    if (uploadError) {
+      console.error("❌ Upload-Fehler:", uploadError);
+      showMessage("Fehler beim Hochladen: " + uploadError.message);
+      return;
+    }
 
-  if (error) {
-    console.error("❌ Upload-Fehler:", error);
-    showMessage("Fehler beim Hochladen: " + error.message);
-    return;
+    const { data } = supabaseClient
+      .storage
+      .from('pet-images')
+      .getPublicUrl(filePath);
+
+    imageUrl = data.publicUrl;
   }
 
-  const publicUrl = supabaseClient
-    .storage
-    .from('pet-images')
-    .getPublicUrl(filePath).data.publicUrl;
-
-  imageUrl = publicUrl;
-}
-
-
-  // Tier speichern
   const { error } = await supabaseClient.from('pets').insert({
     owner_id: currentUserId,
     name,
@@ -116,7 +111,8 @@ petForm.addEventListener('submit', async (e) => {
   });
 
   if (error) {
-    showMessage("Fehler beim Speichern.");
+    console.error("❌ Fehler beim Speichern:", error);
+    showMessage("Fehler beim Speichern: " + error.message);
   } else {
     showMessage("Tier hinzugefügt!");
     petForm.reset();
@@ -124,7 +120,7 @@ petForm.addEventListener('submit', async (e) => {
   }
 });
 
-// User laden nach Login
+// Benutzer laden
 async function loadUser() {
   const user = (await supabaseClient.auth.getUser()).data.user;
   if (!user) return;
