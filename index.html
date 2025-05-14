@@ -40,16 +40,29 @@
         <option value="Weiblich">Weiblich</option>
         <option value="Divers">Divers</option>
       </select>
-      <input type="text" id="pet_type" placeholder="Tier (z.B. Hund, Katze)" />
       <select id="role">
         <option value="">Ich bin ein...</option>
         <option value="sitter">Sitter (Anbieter)</option>
         <option value="owner">Tierbesitzer (Nutzer)</option>
       </select>
       <button id="save-profile">Profil speichern</button>
+
+      <h3>Meine Tiere</h3>
+      <form id="pet-form">
+        <input type="text" id="pet-name" placeholder="Name des Tiers" required />
+        <input type="text" id="pet-type" placeholder="Tierart" required />
+        <textarea id="pet-description" placeholder="Beschreibung" rows="3"></textarea>
+        <select id="pet-role">
+          <option value="owner">Ich suche einen Sitter</option>
+          <option value="sitter">Ich biete Sitter-Dienste</option>
+        </select>
+        <input type="file" id="pet-image" accept="image/*" />
+        <button type="submit">Tier hinzufügen</button>
+      </form>
+      <ul id="pet-list"></ul>
     </div>
 
-    <!-- Nutzerliste -->
+    <!-- Suchende -->
     <div id="users-page" class="page hidden">
       <h2>Suchende (Nutzer)</h2>
       <ul id="users-list"></ul>
