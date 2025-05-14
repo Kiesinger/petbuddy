@@ -42,6 +42,7 @@ signupBtn.addEventListener('click', async () => {
 // Profil speichern
 saveProfileBtn.addEventListener('click', async () => {
   const user = (await supabaseClient.auth.getUser()).data.user;
+  currentUserId = user.id;
   const { error } = await supabaseClient.from('profiles').upsert({
     user_id: user.id,
     age: age.value,
