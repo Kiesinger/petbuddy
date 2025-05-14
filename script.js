@@ -1,4 +1,4 @@
-const supabaseClient = supabase.createClient('https://YOUR_PROJECT.supabase.co', 'YOUR_PUBLIC_ANON_KEY');
+const supabaseClient = supabase.createClient('https://hdturwmfbkbcwdyyfzao.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkdHVyd21mYmtiY3dkeXlmemFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNTE5NjMsImV4cCI6MjA2MjgyNzk2M30.4skXOC9ojcKNiYo5q0ZkChYyx28z_mkI5CxNz31bofI');
 
 const loginBtn = document.getElementById('login-btn');
 const signupBtn = document.getElementById('signup-btn');
