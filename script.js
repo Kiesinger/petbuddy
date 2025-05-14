@@ -1,7 +1,7 @@
 const supabaseClient = supabase.createClient('https://hdturwmfbkbcwdyyfzao.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkdHVyd21mYmtiY3dkeXlmemFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNTE5NjMsImV4cCI6MjA2MjgyNzk2M30.4skXOC9ojcKNiYo5q0ZkChYyx28z_mkI5CxNz31bofI');
 
 
-// UI-Elemente
+// DOM Elements
 const loginBtn = document.getElementById('login-btn');
 const signupBtn = document.getElementById('signup-btn');
 const saveProfileBtn = document.getElementById('save-profile');
@@ -11,7 +11,7 @@ const petList = document.getElementById('pet-list');
 
 let currentUserId = null;
 
-// Feedback anzeigen
+// Info anzeigen
 function showMessage(msg) {
   const box = document.getElementById('message-box');
   box.textContent = msg;
@@ -42,7 +42,8 @@ signupBtn.addEventListener('click', async () => {
 // Profil speichern
 saveProfileBtn.addEventListener('click', async () => {
   const user = (await supabaseClient.auth.getUser()).data.user;
-  currentUserId = user.id;
+  if (!user) return;
+
   const { error } = await supabaseClient.from('profiles').upsert({
     user_id: user.id,
     age: age.value,
@@ -50,6 +51,7 @@ saveProfileBtn.addEventListener('click', async () => {
     gender: gender.value,
     role: role.value,
   });
+
   if (error) showMessage(error.message);
   else {
     showMessage("Profil gespeichert!");
@@ -58,7 +60,7 @@ saveProfileBtn.addEventListener('click', async () => {
   }
 });
 
-// Dropdown Navigation
+// Navigation
 pageSelect.addEventListener('change', () => {
   document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
   document.getElementById(pageSelect.value).classList.remove('hidden');
@@ -76,6 +78,14 @@ petForm.addEventListener('submit', async (e) => {
 
   let imageUrl = null;
 
+  const user = (await supabaseClient.auth.getUser()).data.user;
+  if (!user) {
+    showMessage("Nicht eingeloggt.");
+    return;
+  }
+  currentUserId = user.id;
+
+  // Bild hochladen (wenn vorhanden)
   if (file) {
     const fileExt = file.name.split('.').pop();
     const fileName = `${crypto.randomUUID()}.${fileExt}`;
@@ -100,8 +110,9 @@ petForm.addEventListener('submit', async (e) => {
     imageUrl = data.publicUrl;
   }
 
+  // Eintrag speichern (RLS-konform!)
   const { error } = await supabaseClient.from('pets').insert({
-    owner_id: currentUserId, // Wichtig für RLS
+    owner_id: currentUserId,
     name,
     pet_type: type,
     description,
@@ -110,7 +121,7 @@ petForm.addEventListener('submit', async (e) => {
   });
 
   if (error) {
-    console.error("❌ Fehler beim Speichern:", error);
+    console.error("❌ Fehler beim Einfügen:", error);
     showMessage("Fehler beim Speichern: " + error.message);
   } else {
     showMessage("Tier hinzugefügt!");
@@ -119,11 +130,10 @@ petForm.addEventListener('submit', async (e) => {
   }
 });
 
-// Nach Login: Nutzer laden
+// Nutzer laden nach Login
 async function loadUser() {
   const user = (await supabaseClient.auth.getUser()).data.user;
   if (!user) return;
-
   currentUserId = user.id;
 
   document.getElementById('auth-section').classList.add('hidden');
@@ -135,9 +145,9 @@ async function loadUser() {
   loadSitters();
 }
 
-// Eigene Tiere anzeigen
+// Eigene Tiere laden
 async function loadMyPets() {
-  const { data, error } = await supabaseClient
+  const { data } = await supabaseClient
     .from('pets')
     .select('*')
     .eq('owner_id', currentUserId);
@@ -154,7 +164,6 @@ async function loadMyPets() {
     petList.appendChild(li);
   });
 
-  // Delete Buttons
   document.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       const id = btn.getAttribute('data-id');
@@ -164,7 +173,7 @@ async function loadMyPets() {
   });
 }
 
-// Nutzer (Suchende) anzeigen
+// Suchende anzeigen
 async function loadUsers() {
   const { data } = await supabaseClient
     .from('pets')
