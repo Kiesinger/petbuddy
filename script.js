@@ -1,11 +1,11 @@
-const supabase = supabase.createClient('https://hdturwmfbkbcwdyyfzao.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkdHVyd21mYmtiY3dkeXlmemFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNTE5NjMsImV4cCI6MjA2MjgyNzk2M30.4skXOC9ojcKNiYo5q0ZkChYyx28z_mkI5CxNz31bofI');
+const supabaseClient = supabase.createClient('https://hdturwmfbkbcwdyyfzao.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkdHVyd21mYmtiY3dkeXlmemFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNTE5NjMsImV4cCI6MjA2MjgyNzk2M30.4skXOC9ojcKNiYo5q0ZkChYyx28z_mkI5CxNz31bofI');
 
 const loginBtn = document.getElementById('login-btn');
 const signupBtn = document.getElementById('signup-btn');
 const saveProfileBtn = document.getElementById('save-profile');
 
 loginBtn.addEventListener('click', async () => {
-  const { error } = await supabase.auth.signInWithPassword({
+  const { error } = await supabaseClient.auth.signInWithPassword({
     email: email.value,
     password: password.value,
   });
@@ -16,7 +16,7 @@ loginBtn.addEventListener('click', async () => {
 });
 
 signupBtn.addEventListener('click', async () => {
-  const { error } = await supabase.auth.signUp({
+  const { error } = await supabaseClient.auth.signUp({
     email: email.value,
     password: password.value,
   });
@@ -25,8 +25,8 @@ signupBtn.addEventListener('click', async () => {
 });
 
 saveProfileBtn.addEventListener('click', async () => {
-  const user = (await supabase.auth.getUser()).data.user;
-  const { error } = await supabase.from('profiles').upsert({
+  const user = (await supabaseClient.auth.getUser()).data.user;
+  const { error } = await supabaseClient.from('profiles').upsert({
     user_id: user.id,
     age: age.value,
     location: location.value,
@@ -42,7 +42,7 @@ saveProfileBtn.addEventListener('click', async () => {
 });
 
 async function loadUser() {
-  const user = (await supabase.auth.getUser()).data.user;
+  const user = (await supabaseClient.auth.getUser()).data.user;
   if (!user) return;
   document.getElementById('auth-section').classList.add('hidden');
   document.getElementById('profile-section').classList.remove('hidden');
@@ -50,7 +50,7 @@ async function loadUser() {
 
 async function loadSitters() {
   document.getElementById('match-section').classList.remove('hidden');
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('profiles')
     .select('*')
     .eq('role', 'sitter');
