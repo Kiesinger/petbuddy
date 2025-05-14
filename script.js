@@ -4,6 +4,9 @@ const loginBtn = document.getElementById('login-btn');
 const signupBtn = document.getElementById('signup-btn');
 const saveProfileBtn = document.getElementById('save-profile');
 const pageSelect = document.getElementById('page-select');
+const petForm = document.getElementById('pet-form');
+const petList = document.getElementById('pet-list');
+let currentUserId = null;
 
 function showMessage(msg) {
   const box = document.getElementById('message-box');
@@ -37,7 +40,6 @@ saveProfileBtn.addEventListener('click', async () => {
     age: age.value,
     location: location.value,
     gender: gender.value,
-    pet_type: pet_type.value,
     role: role.value,
   });
   if (error) showMessage(error.message);
@@ -53,19 +55,100 @@ pageSelect.addEventListener('change', () => {
   document.getElementById(pageSelect.value).classList.remove('hidden');
 });
 
+// Tier hinzufügen
+petForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = document.getElementById('pet-name').value;
+  const type = document.getElementById('pet-type').value;
+  const description = document.getElementById('pet-description').value;
+  const role = document.getElementById('pet-role').value;
+  const file = document.getElementById('pet-image').files[0];
+
+  let imageUrl = null;
+  if (file) {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${crypto.randomUUID()}.${fileExt}`;
+    const filePath = `${currentUserId}/${fileName}`;
+
+    const { error: uploadError } = await supabaseClient
+      .storage
+      .from('pet-images')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      showMessage("Fehler beim Hochladen des Bildes.");
+      return;
+    }
+
+    const { data } = supabaseClient
+      .storage
+      .from('pet-images')
+      .getPublicUrl(filePath);
+    imageUrl = data.publicUrl;
+  }
+
+  const { error } = await supabaseClient.from('pets').insert({
+    owner_id: currentUserId,
+    name,
+    pet_type: type,
+    description,
+    role,
+    image_url: imageUrl
+  });
+
+  if (error) {
+    showMessage("Fehler beim Speichern.");
+  } else {
+    showMessage("Tier hinzugefügt!");
+    petForm.reset();
+    loadMyPets();
+  }
+});
+
 async function loadUser() {
   const user = (await supabaseClient.auth.getUser()).data.user;
   if (!user) return;
+  currentUserId = user.id;
+
   document.getElementById('auth-section').classList.add('hidden');
   document.getElementById('page-select').classList.remove('hidden');
   document.getElementById('profile-page').classList.remove('hidden');
+
+  loadMyPets();
   loadUsers();
   loadSitters();
 }
 
+async function loadMyPets() {
+  const { data } = await supabaseClient
+    .from('pets')
+    .select('*')
+    .eq('owner_id', currentUserId);
+
+  petList.innerHTML = '';
+  data.forEach(pet => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <strong>${pet.name}</strong> (${pet.pet_type}) – ${pet.role}<br/>
+      ${pet.description}<br/>
+      ${pet.image_url ? `<img src="${pet.image_url}" alt="Tierbild"/>` : ''}
+      <button class="delete-btn" data-id="${pet.id}">🗑️</button>
+    `;
+    petList.appendChild(li);
+  });
+
+  document.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-id');
+      await supabaseClient.from('pets').delete().eq('id', id);
+      loadMyPets();
+    });
+  });
+}
+
 async function loadUsers() {
   const { data } = await supabaseClient
-    .from('profiles')
+    .from('pets')
     .select('*')
     .eq('role', 'owner');
 
@@ -73,14 +156,18 @@ async function loadUsers() {
   list.innerHTML = '';
   data.forEach(user => {
     const li = document.createElement('li');
-    li.textContent = `🐶 ${user.pet_type} | ${user.gender}, ${user.age} Jahre aus ${user.location}`;
+    li.innerHTML = `
+      <strong>${user.name}</strong> sucht für ${user.pet_type}<br/>
+      ${user.description}<br/>
+      ${user.image_url ? `<img src="${user.image_url}" />` : ''}
+    `;
     list.appendChild(li);
   });
 }
 
 async function loadSitters() {
   const { data } = await supabaseClient
-    .from('profiles')
+    .from('pets')
     .select('*')
     .eq('role', 'sitter');
 
@@ -88,7 +175,11 @@ async function loadSitters() {
   list.innerHTML = '';
   data.forEach(user => {
     const li = document.createElement('li');
-    li.textContent = `🧍 Anbieter für ${user.pet_type} in ${user.location} (${user.gender}, ${user.age})`;
+    li.innerHTML = `
+      <strong>${user.name}</strong> bietet Betreuung für ${user.pet_type}<br/>
+      ${user.description}<br/>
+      ${user.image_url ? `<img src="${user.image_url}" />` : ''}
+    `;
     list.appendChild(li);
   });
 }
