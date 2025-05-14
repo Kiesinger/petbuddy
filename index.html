@@ -3,51 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PetBuddy – Haustierbetreuung leicht gemacht</title>
+  <title>Petbuddy</title>
   <link rel="stylesheet" href="style.css" />
-  
-  <!-- Supabase -->
-  <script type="module" src="script.js"></script>
 </head>
 <body>
   <div class="container">
-    <img src="logo.png" alt="PetBuddy Logo" class="logo" />
+    <img src="logo.png" alt="Petbuddy Logo" class="logo" />
 
-    <div id="authSection">
-      <h2>Willkommen bei PetBuddy</h2>
-      <input type="email" id="email" placeholder="E-Mail" required />
-      <input type="password" id="password" placeholder="Passwort" required />
-      <button id="loginBtn">Einloggen</button>
-      <button id="registerBtn">Registrieren</button>
-      <p id="authMessage" class="hidden">Bitte einloggen oder registrieren.</p>
+    <h1>Petbuddy</h1>
+
+    <div id="auth-section">
+      <input type="email" id="email" placeholder="Email" />
+      <input type="password" id="password" placeholder="Passwort" />
+      <button id="login-btn">Login</button>
+      <button id="signup-btn">Registrieren</button>
     </div>
 
-    <div id="profileSection" class="hidden">
-      <h2>Dein Profil</h2>
-      <label for="role">Ich bin ein:</label>
-      <select id="role">
-        <option value="sitter">Sitter</option>
-        <option value="seeker">Sucher</option>
-      </select>
-      <label for="pet">Haustier:</label>
-      <select id="pet">
-        <option value="hund">Hund</option>
-        <option value="katze">Katze</option>
-        <option value="vogel">Vogel</option>
-      </select>
-      <label for="age">Alter:</label>
-      <input type="number" id="age" placeholder="Alter" required />
-      <label for="gender">Geschlecht:</label>
+    <div id="profile-section" class="hidden">
+      <h2>Profil</h2>
+      <input type="text" id="age" placeholder="Alter" />
+      <input type="text" id="location" placeholder="Ort" />
       <select id="gender">
-        <option value="männlich">Männlich</option>
-        <option value="weiblich">Weiblich</option>
-        <option value="divers">Divers</option>
+        <option value="">Geschlecht wählen</option>
+        <option value="Männlich">Männlich</option>
+        <option value="Weiblich">Weiblich</option>
+        <option value="Divers">Divers</option>
       </select>
-      <label for="location">Wohnort:</label>
-      <input type="text" id="location" placeholder="Stadt" required />
-      <button id="saveProfileBtn">Profil speichern</button>
-      <button id="logoutBtn">Abmelden</button>
+      <input type="text" id="pet_type" placeholder="Tier (z.B. Hund, Katze)" />
+      <select id="role">
+        <option value="">Ich bin ein...</option>
+        <option value="sitter">Sitter (Anbieter)</option>
+        <option value="owner">Tierbesitzer (Nutzer)</option>
+      </select>
+      <button id="save-profile">Profil speichern</button>
+    </div>
+
+    <div id="match-section" class="hidden">
+      <h2>Verfügbare Sitter</h2>
+      <ul id="sitter-list"></ul>
     </div>
   </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
