@@ -1,86 +1,65 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.11.0/+esm';
-const SUPABASE_URL = 'https://rkghjywutskfwwtuzpnt.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrZ2hqeXd1dHNrZnd3dHV6cG50Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyMjQwMDAsImV4cCI6MjA2MjgwMDAwMH0.QpRLi5TzPsvpFCzOilHqsaXw9Y4dv1NWflmO6Z0EkI0';
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-// Supabase-Initialisierung
-supabase.auth.onAuthStateChange((event, session) => {
-  console.log('Auth Event:', event);
-  console.log('Session:', session);
-});
+const supabase = supabase.createClient('https://YOUR_PROJECT.supabase.co', 'YOUR_PUBLIC_ANON_KEY');
 
-// Auth-Buttons
-document.getElementById('loginBtn').addEventListener('click', async () => {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
+const loginBtn = document.getElementById('login-btn');
+const signupBtn = document.getElementById('signup-btn');
+const saveProfileBtn = document.getElementById('save-profile');
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-  if (error) {
-    alert('Fehler beim Einloggen: ' + error.message);
-  } else {
-    toggleSections(true);
+loginBtn.addEventListener('click', async () => {
+  const { error } = await supabase.auth.signInWithPassword({
+    email: email.value,
+    password: password.value,
+  });
+  if (error) alert(error.message);
+  else {
+    loadUser();
   }
 });
 
-document.getElementById('registerBtn').addEventListener('click', async () => {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-
-  const { data, error } = await supabase.auth.signUp({ email, password });
-
-  if (error) {
-    alert('Fehler bei der Registrierung: ' + error.message);
-  } else {
-    alert('Registrierung erfolgreich! Bitte einloggen.');
-  }
+signupBtn.addEventListener('click', async () => {
+  const { error } = await supabase.auth.signUp({
+    email: email.value,
+    password: password.value,
+  });
+  if (error) alert(error.message);
+  else alert("Registrierung erfolgreich! Bitte einloggen.");
 });
 
-// Profil speichern
-document.getElementById('saveProfileBtn').addEventListener('click', async () => {
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    alert('Benutzer nicht gefunden.');
-    return;
-  }
-
-  const profile = {
-    id: user.id,
-    role: document.getElementById('role').value,
-    pet: document.getElementById('pet').value,
-    age: parseInt(document.getElementById('age').value),
-    gender: document.getElementById('gender').value,
-    location: document.getElementById('location').value,
-  };
-
-  const { error } = await supabase.from('profiles').upsert([profile]);
-
-  if (error) {
-    alert('Fehler beim Speichern des Profils: ' + error.message);
-  } else {
+saveProfileBtn.addEventListener('click', async () => {
+  const user = (await supabase.auth.getUser()).data.user;
+  const { error } = await supabase.from('profiles').upsert({
+    user_id: user.id,
+    age: age.value,
+    location: location.value,
+    gender: gender.value,
+    pet_type: pet_type.value,
+    role: role.value,
+  });
+  if (error) alert(error.message);
+  else {
     alert('Profil gespeichert!');
+    if (role.value === 'owner') loadSitters();
   }
 });
 
-// Logout
-document.getElementById('logoutBtn').addEventListener('click', async () => {
-  await supabase.auth.signOut();
-  toggleSections(false);
-});
-
-// Sichtbarkeit der Bereiche umschalten
-async function toggleSections(isLoggedIn) {
-  if (isLoggedIn) {
-    document.getElementById('authSection').classList.add('hidden');
-    document.getElementById('profileSection').classList.remove('hidden');
-  } else {
-    document.getElementById('authSection').classList.remove('hidden');
-    document.getElementById('profileSection').classList.add('hidden');
-  }
+async function loadUser() {
+  const user = (await supabase.auth.getUser()).data.user;
+  if (!user) return;
+  document.getElementById('auth-section').classList.add('hidden');
+  document.getElementById('profile-section').classList.remove('hidden');
 }
 
-// Beim Laden prüfen, ob Benutzer eingeloggt ist
-window.addEventListener('DOMContentLoaded', async () => {
-  const { data: { user } } = await supabase.auth.getUser();
-  toggleSections(!!user);
-});
+async function loadSitters() {
+  document.getElementById('match-section').classList.remove('hidden');
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('role', 'sitter');
+  
+  const sitterList = document.getElementById('sitter-list');
+  sitterList.innerHTML = '';
+  data.forEach(sitter => {
+    const li = document.createElement('li');
+    li.textContent = `${sitter.pet_type} Sitter in ${sitter.location} (${sitter.gender}, ${sitter.age} Jahre)`;
+    sitterList.appendChild(li);
+  });
+}
