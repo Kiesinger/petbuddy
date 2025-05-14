@@ -1,19 +1,17 @@
-// Supabase initialisieren
-const supabaseClient = supabase.createClient(
-  'https://hdturwmfbkbcwdyyfzao.supabase.co', 
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkdHVyd21mYmtiY3dkeXlmemFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNTE5NjMsImV4cCI6MjA2MjgyNzk2M30.4skXOC9ojcKNiYo5q0ZkChYyx28z_mkI5CxNz31bofI'
-);
+const supabaseClient = supabase.createClient('https://hdturwmfbkbcwdyyfzao.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkdHVyd21mYmtiY3dkeXlmemFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNTE5NjMsImV4cCI6MjA2MjgyNzk2M30.4skXOC9ojcKNiYo5q0ZkChYyx28z_mkI5CxNz31bofI');
 
-// DOM Elemente
+
+// UI-Elemente
 const loginBtn = document.getElementById('login-btn');
 const signupBtn = document.getElementById('signup-btn');
 const saveProfileBtn = document.getElementById('save-profile');
 const pageSelect = document.getElementById('page-select');
 const petForm = document.getElementById('pet-form');
 const petList = document.getElementById('pet-list');
+
 let currentUserId = null;
 
-// Nachricht anzeigen
+// Feedback anzeigen
 function showMessage(msg) {
   const box = document.getElementById('message-box');
   box.textContent = msg;
@@ -59,7 +57,7 @@ saveProfileBtn.addEventListener('click', async () => {
   }
 });
 
-// Navigation wechseln
+// Dropdown Navigation
 pageSelect.addEventListener('change', () => {
   document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
   document.getElementById(pageSelect.value).classList.remove('hidden');
@@ -102,7 +100,7 @@ petForm.addEventListener('submit', async (e) => {
   }
 
   const { error } = await supabaseClient.from('pets').insert({
-    owner_id: currentUserId,
+    owner_id: currentUserId, // Wichtig für RLS
     name,
     pet_type: type,
     description,
@@ -120,10 +118,11 @@ petForm.addEventListener('submit', async (e) => {
   }
 });
 
-// Benutzer laden
+// Nach Login: Nutzer laden
 async function loadUser() {
   const user = (await supabaseClient.auth.getUser()).data.user;
   if (!user) return;
+
   currentUserId = user.id;
 
   document.getElementById('auth-section').classList.add('hidden');
@@ -135,9 +134,9 @@ async function loadUser() {
   loadSitters();
 }
 
-// Eigene Tiere laden
+// Eigene Tiere anzeigen
 async function loadMyPets() {
-  const { data } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from('pets')
     .select('*')
     .eq('owner_id', currentUserId);
@@ -154,6 +153,7 @@ async function loadMyPets() {
     petList.appendChild(li);
   });
 
+  // Delete Buttons
   document.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       const id = btn.getAttribute('data-id');
@@ -163,7 +163,7 @@ async function loadMyPets() {
   });
 }
 
-// Suchende anzeigen
+// Nutzer (Suchende) anzeigen
 async function loadUsers() {
   const { data } = await supabaseClient
     .from('pets')
