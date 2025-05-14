@@ -1,4 +1,8 @@
 // Supabase-Initialisierung
+supabase.auth.onAuthStateChange((event, session) => {
+  console.log('Auth Event:', event);
+  console.log('Session:', session);
+});
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.11.0/+esm';
 const SUPABASE_URL = 'https://rkghjywutskfwwtuzpnt.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrZ2hqeXd1dHNrZnd3dHV6cG50Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyMjQwMDAsImV4cCI6MjA2MjgwMDAwMH0.QpRLi5TzPsvpFCzOilHqsaXw9Y4dv1NWflmO6Z0EkI0';
