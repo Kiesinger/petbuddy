@@ -4,12 +4,42 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Petbuddy</title>
-  <link rel="stylesheet" href="style.css" />
+
+  <!-- Eigenes CSS -->
+  <link rel="stylesheet" href="style.css"/>
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+  </script>
+
+  <style>
+    /* Nur falls du es nicht in style.css packen willst */
+    #map {
+      height: 400px;
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <img src="logo.png" alt="Petbuddy Logo" class="logo" />
     <h1>Petbuddy</h1>
+
+    <!-- Navigation -->
+    <select id="page-select" class="nav-dropdown hidden">
+      <option value="profile-page">👤 Mein Profil</option>
+      <option value="users-page">🔎 Suchende</option>
+      <option value="sitters-page">🐾 Anbieter</option>
+    </select>
 
     <!-- Nachrichtenbox -->
     <div id="message-box" class="hidden"></div>
@@ -22,33 +52,83 @@
       <button id="signup-btn">Registrieren</button>
     </div>
 
-    <!-- Navigation -->
-    <select id="page-select" class="nav-dropdown hidden">
-      <option value="profile-page">👤 Mein Profil</option>
-    </select>
-
     <!-- Profilseite -->
-    <div id="profile-page" class="page hidden">
-      <h2>Mein Profil</h2>
-      <input type="text" id="name" placeholder="Name" />
-      <input type="text" id="age" placeholder="Alter" />
-      <input type="text" id="location" placeholder="Ort" />
-      <select id="gender">
-        <option value="">Geschlecht wählen</option>
-        <option value="Männlich">Männlich</option>
-        <option value="Weiblich">Weiblich</option>
-        <option value="Divers">Divers</option>
-      </select>
-      <select id="role">
-        <option value="">Ich bin ein...</option>
-        <option value="sitter">Sitter (Anbieter)</option>
-        <option value="owner">Tierbesitzer (Nutzer)</option>
-      </select>
-      <button id="save-profile">Profil speichern</button>
+  <div id="profile-page" class="page hidden">
+  <h2>Mein Profil</h2>
+
+  <label for="full-name">Name:</label>
+  <input type="text" id="full-name" name="full-name" placeholder="Name" />
+
+  <input type="text" id="age" placeholder="Alter" />
+  <input type="text" id="location" placeholder="Ort" />
+
+  <select id="gender">
+    <option value="">Geschlecht wählen</option>
+    <option value="Männlich">Männlich</option>
+    <option value="Weiblich">Weiblich</option>
+    <option value="Divers">Divers</option>
+  </select>
+
+  <select id="role">
+    <option value="">Ich bin ein...</option>
+    <option value="sitter">Sitter (Anbieter)</option>
+    <option value="owner">Tierbesitzer (Nutzer)</option>
+  </select>
+
+  <button id="save-profile">Profil speichern</button>
+
+  <h3>Meine Tiere</h3>
+  <form id="pet-form">
+    <input type="text" id="pet-name" placeholder="Name des Tiers" required />
+    <input type="text" id="pet-type" placeholder="Tierart" required />
+    <textarea id="pet-description" placeholder="Beschreibung" rows="3"></textarea>
+    <select id="pet-role">
+      <option value="owner">Ich suche einen Sitter</option>
+      <option value="sitter">Ich biete Sitter-Dienste</option>
+    </select>
+    <input type="file" id="pet-image" accept="image/*" />
+    <button type="submit">Tier hinzufügen</button>
+  </form>
+
+  <ul id="pet-list"></ul>
+</div>
+
+
+      <h3>Meine Tiere</h3>
+      <form id="pet-form">
+        <input type="text" id="pet-name" placeholder="Name des Tiers" required />
+        <input type="text" id="pet-type" placeholder="Tierart" required />
+        <textarea id="pet-description" placeholder="Beschreibung" rows="3"></textarea>
+        <select id="pet-role">
+          <option value="owner">Ich suche einen Sitter</option>
+          <option value="sitter">Ich biete Sitter-Dienste</option>
+        </select>
+        <input type="file" id="pet-image" accept="image/*" />
+        <button type="submit">Tier hinzufügen</button>
+      </form>
+
+      <ul id="pet-list"></ul>
+
+      <!-- 🌍 Karten-Container -->
+      <h3>Standorte</h3>
+      <div id="map"></div>
+    </div>
+
+    <!-- Nutzerliste -->
+    <div id="users-page" class="page hidden">
+      <h2>Suchende (Nutzer)</h2>
+      <ul id="users-list"></ul>
+    </div>
+
+    <!-- Anbieter -->
+    <div id="sitters-page" class="page hidden">
+      <h2>Anbieter (Sitter)</h2>
+      <ul id="sitters-list"></ul>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Supabase & Script -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="script.js"></script>
 </body>
 </html>
