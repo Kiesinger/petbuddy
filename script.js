@@ -48,7 +48,6 @@ saveProfileBtn.addEventListener('click', async () => {
 
   const { error } = await supabaseClient.from('profiles').upsert({
     user_id: user.id,
-    full_name: document.getElementById('full-name').value,
     age: age.value,
     location: location.value,
     gender: gender.value,
@@ -58,11 +57,11 @@ saveProfileBtn.addEventListener('click', async () => {
   if (error) showMessage(error.message);
   else {
     showMessage("Profil gespeichert!");
+    await loadProfile(); // aktualisierte Anzeige
     loadUsers();
     loadSitters();
   }
 });
-
 
 // Navigation
 pageSelect.addEventListener('change', () => {
@@ -202,22 +201,24 @@ async function loadMyPets() {
 }
 
 // Suchende anzeigen
-async function loadUser() {
-  const user = (await supabaseClient.auth.getUser()).data.user;
-  if (!user) return;
-  currentUserId = user.id;
+async function loadUsers() {
+  const { data } = await supabaseClient
+    .from('pets')
+    .select('*')
+    .eq('role', 'owner');
 
-  await loadProfile(); // 👈 Diese Zeile fügt das gespeicherte Profil in die Felder ein
-
-  document.getElementById('auth-section').classList.add('hidden');
-  document.getElementById('page-select').classList.remove('hidden');
-  document.getElementById('profile-page').classList.remove('hidden');
-
-  loadMyPets();
-  loadUsers();
-  loadSitters();
+  const list = document.getElementById('users-list');
+  list.innerHTML = '';
+  data.forEach(user => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <strong>${user.name}</strong> sucht für ${user.pet_type}<br/>
+      ${user.description}<br/>
+      ${user.image_url ? `<img src="${user.image_url}" />` : ''}
+    `;
+    list.appendChild(li);
+  });
 }
-
 
 // Anbieter anzeigen
 async function loadSitters() {
@@ -237,22 +238,4 @@ async function loadSitters() {
     `;
     list.appendChild(li);
   });
-}
-async function loadProfile() {
-  const user = (await supabaseClient.auth.getUser()).data.user;
-  if (!user) return;
-
-  const { data, error } = await supabaseClient
-    .from('profiles')
-    .select('*')
-    .eq('user_id', user.id)
-    .single();
-
-  if (error || !data) return;
-
-  document.getElementById('full-name').value = data.full_name || '';
-  document.getElementById('age').value = data.age || '';
-  document.getElementById('location').value = data.location || '';
-  document.getElementById('gender').value = data.gender || '';
-  document.getElementById('role').value = data.role || '';
 }
