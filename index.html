@@ -60,7 +60,10 @@
   <input type="text" id="full-name" name="full-name" placeholder="Name" />
 
   <input type="text" id="age" placeholder="Alter" />
-  <input type="text" id="location" placeholder="Ort" />
+  <div id="profile-page" class="hidden">
+  <input type="text" id="location" placeholder="Standort" />
+</div>
+
 
   <select id="gender">
     <option value="">Geschlecht wählen</option>
@@ -96,7 +99,11 @@
 
      
 
-    
+      <!-- 🌍 Karten-Container -->
+      <h3>Standorte</h3>
+      <div id="map"></div>
+    </div>
+
     <!-- Nutzerliste -->
     <div id="users-page" class="page hidden">
       <h2>Suchende (Nutzer)</h2>
