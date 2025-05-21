@@ -48,6 +48,7 @@ saveProfileBtn.addEventListener('click', async () => {
 
   const { error } = await supabaseClient.from('profiles').upsert({
     user_id: user.id,
+    full_name: document.getElementById('full-name').value, // 🔸 NEU
     age: age.value,
     location: location.value,
     gender: gender.value,
@@ -57,7 +58,7 @@ saveProfileBtn.addEventListener('click', async () => {
   if (error) showMessage(error.message);
   else {
     showMessage("Profil gespeichert!");
-    await loadProfile(); // aktualisierte Anzeige
+    await loadProfile();
     loadUsers();
     loadSitters();
   }
@@ -88,7 +89,6 @@ petForm.addEventListener('submit', async (e) => {
   }
   currentUserId = user.id;
 
-  // Bild hochladen (wenn vorhanden)
   if (file) {
     const fileExt = file.name.split('.').pop();
     const fileName = `${crypto.randomUUID()}.${fileExt}`;
@@ -113,7 +113,6 @@ petForm.addEventListener('submit', async (e) => {
     imageUrl = data.publicUrl;
   }
 
-  // Eintrag speichern (RLS-konform!)
   const { error } = await supabaseClient.from('pets').insert({
     owner_id: currentUserId,
     name,
@@ -143,7 +142,7 @@ async function loadUser() {
   document.getElementById('page-select').classList.remove('hidden');
   document.getElementById('profile-page').classList.remove('hidden');
 
-  await loadProfile(); // Profil anzeigen
+  await loadProfile();
   loadMyPets();
   loadUsers();
   loadSitters();
@@ -165,7 +164,7 @@ async function loadProfile() {
     return;
   }
 
-  // Felder befüllen
+  document.getElementById('full-name').value = data.full_name || ''; // 🔸 NEU
   document.getElementById('age').value = data.age || '';
   document.getElementById('location').value = data.location || '';
   document.getElementById('gender').value = data.gender || '';
@@ -186,56 +185,4 @@ async function loadMyPets() {
       <strong>${pet.name}</strong> (${pet.pet_type}) – ${pet.role}<br/>
       ${pet.description}<br/>
       ${pet.image_url ? `<img src="${pet.image_url}" alt="Tierbild" />` : ''}
-      <button class="delete-btn" data-id="${pet.id}">🗑️</button>
-    `;
-    petList.appendChild(li);
-  });
-
-  document.querySelectorAll('.delete-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const id = btn.getAttribute('data-id');
-      await supabaseClient.from('pets').delete().eq('id', id);
-      loadMyPets();
-    });
-  });
-}
-
-// Suchende anzeigen
-async function loadUsers() {
-  const { data } = await supabaseClient
-    .from('pets')
-    .select('*')
-    .eq('role', 'owner');
-
-  const list = document.getElementById('users-list');
-  list.innerHTML = '';
-  data.forEach(user => {
-    const li = document.createElement('li');
-    li.innerHTML = `
-      <strong>${user.name}</strong> sucht für ${user.pet_type}<br/>
-      ${user.description}<br/>
-      ${user.image_url ? `<img src="${user.image_url}" />` : ''}
-    `;
-    list.appendChild(li);
-  });
-}
-
-// Anbieter anzeigen
-async function loadSitters() {
-  const { data } = await supabaseClient
-    .from('pets')
-    .select('*')
-    .eq('role', 'sitter');
-
-  const list = document.getElementById('sitters-list');
-  list.innerHTML = '';
-  data.forEach(user => {
-    const li = document.createElement('li');
-    li.innerHTML = `
-      <strong>${user.name}</strong> bietet Betreuung für ${user.pet_type}<br/>
-      ${user.description}<br/>
-      ${user.image_url ? `<img src="${user.image_url}" />` : ''}
-    `;
-    list.appendChild(li);
-  });
-}
+      <button class="delete-btn" data-id="${pet.id}">
