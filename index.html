@@ -4,12 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Petbuddy</title>
-
-  <!-- Eigenes CSS -->
   <link rel="stylesheet" href="style.css"/>
-
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
   <div class="container">
@@ -37,8 +32,6 @@
     <!-- Profilseite -->
     <div id="profile-page" class="page hidden">
       <h2>Mein Profil</h2>
-      <label for="full-name">Name:</label>
-      <input type="text" id="full-name" placeholder="Name" />
       <input type="text" id="age" placeholder="Alter" />
       <input type="text" id="location" placeholder="Ort" />
       <select id="gender">
@@ -68,10 +61,6 @@
       </form>
 
       <ul id="pet-list"></ul>
-
-      <!-- Karten-Container -->
-      <h3>Standorte</h3>
-      <div id="map" style="height: 400px; margin-top: 20px; border: 1px solid #ccc; border-radius: 8px;"></div>
     </div>
 
     <!-- Nutzerliste -->
@@ -87,9 +76,6 @@
     </div>
   </div>
 
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <!-- Supabase & eigenes Script -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="script.js"></script>
 </body>
