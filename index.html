@@ -1,156 +1,180 @@
 <!DOCTYPE html>
 <html lang="de">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Petbuddy</title>
-
-  <!-- Eigenes CSS -->
-  <link rel="stylesheet" href="style.css"/>
-
-  <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
-
-  <!-- Leaflet JS -->
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-  </script>
-
-  <style>
-    #map {
-      height: 400px;
-      margin-top: 20px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <img src="logo.png" alt="Petbuddy Logo" class="logo" />
-    <h1>Petbuddy</h1>
-
-    <!-- Navigation -->
-    <select id="page-select" class="nav-dropdown hidden">
-      <option value="profile-page">👤 Mein Profil</option>
-      <option value="users-page">🔎 Suchende</option>
-      <option value="sitters-page">🐾 Anbieter</option>
-    </select>
-
-    <!-- Nachrichtenbox -->
-    <div id="message-box" class="hidden"></div>
-
-    <!-- Authentifizierung -->
-    <div id="auth-section">
-      <input type="email" id="email" placeholder="Email" />
-      <input type="password" id="password" placeholder="Passwort" />
-      <button id="login-btn">Login</button>
-      <button id="signup-btn">Registrieren</button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Benutzerprofil mit Karte</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <style>
+      #map {
+        height: 400px;
+        margin-top: 20px;
+      }
+      #profile-form,
+      #map {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Login-Formular -->
+    <div id="login-form">
+      <h2>Login</h2>
+      <input type="email" id="email" placeholder="Email" /><br />
+      <input type="password" id="password" placeholder="Passwort" /><br />
+      <button onclick="login()">Einloggen</button>
     </div>
 
-    <!-- Profilseite -->
-    <div id="profile-page" class="page hidden">
-      <h2>Mein Profil</h2>
-      <label for="full-name">Name:</label>
-      <input type="text" id="full-name" name="full-name" placeholder="Name" />
-      <input type="text" id="age" placeholder="Alter" />
-      <input type="text" id="location" placeholder="Ort" />
-      <select id="gender">
-        <option value="">Geschlecht wählen</option>
-        <option value="Männlich">Männlich</option>
-        <option value="Weiblich">Weiblich</option>
-        <option value="Divers">Divers</option>
-      </select>
-      <select id="role">
-        <option value="">Ich bin ein...</option>
-        <option value="sitter">Sitter (Anbieter)</option>
-        <option value="owner">Tierbesitzer (Nutzer)</option>
-      </select>
-      <button id="save-profile">Profil speichern</button>
-
-      <h3>Meine Tiere</h3>
-      <form id="pet-form">
-        <input type="text" id="pet-name" placeholder="Name des Tiers" required />
-        <input type="text" id="pet-type" placeholder="Tierart" required />
-        <textarea id="pet-description" placeholder="Beschreibung" rows="3"></textarea>
-        <select id="pet-role">
-          <option value="owner">Ich suche einen Sitter</option>
-          <option value="sitter">Ich biete Sitter-Dienste</option>
-        </select>
-        <input type="file" id="pet-image" accept="image/*" />
-        <button type="submit">Tier hinzufügen</button>
-      </form>
-      <ul id="pet-list"></ul>
+    <!-- Profil-Formular -->
+    <div id="profile-form">
+      <h2>Profil</h2>
+      <input type="text" id="full-name" placeholder="Voller Name" /><br />
+      <textarea id="bio" placeholder="Bio"></textarea><br />
+      <input type="text" id="location" placeholder="Ort (z.B. Berlin)" /><br />
+      <input type="url" id="website" placeholder="Webseite" /><br />
+      <button onclick="saveProfile()">Speichern</button>
+      <button onclick="logout()">Abmelden</button>
     </div>
 
-    <!-- 🌍 Karten-Container -->
-    <h3>Standorte</h3>
+    <!-- Karte -->
     <div id="map"></div>
 
-    <!-- Nutzerliste -->
-    <div id="users-page" class="page hidden">
-      <h2>Suchende (Nutzer)</h2>
-      <ul id="users-list"></ul>
-    </div>
+    <!-- Leaflet + Supabase + Script -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      const supabaseClient = supabase.createClient(
+        'https://tqrrmmbplwywmoyqdtui.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxcnJtbWJwbHd5d213b3lxZHR1aSIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzE1MzQyNDYxLCJleHAiOjE3NDY4Nzg0NjF9.kD1iN5yYH1Y7i5KJ8NNoa8HXvM4ZJUQz3JX7T9fuhB4'
+      );
 
-    <!-- Anbieter -->
-    <div id="sitters-page" class="page hidden">
-      <h2>Anbieter (Sitter)</h2>
-      <ul id="sitters-list"></ul>
-    </div>
-  </div>
+      // Warte nach Login etwas, bevor session geladen wird
+      document.addEventListener("DOMContentLoaded", async () => {
+        setTimeout(checkSession, 300); // Kurzes Delay für Supabase
+      });
 
-  <!-- Supabase & Script -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script>
-    const supabaseClient = supabase.createClient(
-      'https://hdturwmfbkbcwdyyfzao.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
-    );
+      async function checkSession() {
+        const {
+          data: { session },
+        } = await supabaseClient.auth.getSession();
 
-    let currentUserId = null;
-
-    // 🌍 Karte initialisieren
-    let map = L.map('map').setView([51.1657, 10.4515], 6);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap-Mitwirkende'
-    }).addTo(map);
-
-    async function updateMapMarkers() {
-      const { data, error } = await supabaseClient
-        .from('profiles')
-        .select('full_name, location');
-
-      if (error) {
-        console.error("Fehler beim Laden der Standorte:", error);
-        return;
-      }
-
-      for (const user of data) {
-        if (!user.location) continue;
-        try {
-          const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(user.location)}`);
-          const results = await response.json();
-
-          if (results.length > 0) {
-            const { lat, lon } = results[0];
-            L.marker([lat, lon])
-              .addTo(map)
-              .bindPopup(`${user.full_name || 'Unbekannt'} (${user.location})`);
-          }
-        } catch (geoError) {
-          console.warn("Geokodierungsfehler für Ort:", user.location, geoError);
+        if (session && session.user) {
+          loadUser(session.user.id);
+        } else {
+          showLogin();
         }
       }
-    }
 
-    updateMapMarkers();
+      async function login() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
 
-    // Login-Logik (verkürzt, du kannst deinen vorhandenen Script-Teil nach unten hier einfügen)
-  </script>
-  <script src="script.js"></script>
-</body>
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+        if (error) {
+          alert('Fehler beim Login: ' + error.message);
+        } else {
+          // Warten bis Session da ist
+          setTimeout(checkSession, 500);
+        }
+      }
+
+      async function logout() {
+        await supabaseClient.auth.signOut();
+        showLogin();
+      }
+
+      function showLogin() {
+        document.getElementById('login-form').style.display = 'block';
+        document.getElementById('profile-form').style.display = 'none';
+        document.getElementById('map').style.display = 'none';
+      }
+
+      function showProfile() {
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('profile-form').style.display = 'block';
+        document.getElementById('map').style.display = 'block';
+      }
+
+      async function loadUser(userId) {
+        const { data, error } = await supabaseClient
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+
+        if (data) {
+          document.getElementById('full-name').value = data.full_name || '';
+          document.getElementById('bio').value = data.bio || '';
+          document.getElementById('location').value = data.location || '';
+          document.getElementById('website').value = data.website || '';
+        }
+
+        showProfile();
+        initializeMap(); // Karte laden
+      }
+
+      async function saveProfile() {
+        const {
+          data: { user },
+        } = await supabaseClient.auth.getUser();
+
+        const updates = {
+          id: user.id,
+          full_name: document.getElementById('full-name').value,
+          bio: document.getElementById('bio').value,
+          location: document.getElementById('location').value,
+          website: document.getElementById('website').value,
+          updated_at: new Date(),
+        };
+
+        const { error } = await supabaseClient.from('profiles').upsert(updates);
+
+        if (error) {
+          alert('Fehler beim Speichern: ' + error.message);
+        } else {
+          alert('Profil gespeichert!');
+          initializeMap(); // Karte neu laden nach Speichern
+        }
+      }
+
+      async function initializeMap() {
+        const mapContainer = document.getElementById('map');
+        mapContainer.innerHTML = ''; // Reset bei erneutem Aufruf
+        const map = L.map('map').setView([51.1657, 10.4515], 6); // Deutschland-Zentrum
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap-Mitwirkende',
+        }).addTo(map);
+
+        const { data: profiles, error } = await supabaseClient
+          .from('profiles')
+          .select('full_name, location');
+
+        if (error) {
+          console.error("Fehler beim Laden der Standorte:", error);
+          return;
+        }
+
+        profiles.forEach(profile => {
+          if (!profile.location) return;
+
+          fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(profile.location)}`)
+            .then(res => res.json())
+            .then(locations => {
+              if (locations && locations.length > 0) {
+                const { lat, lon } = locations[0];
+                L.marker([lat, lon])
+                  .addTo(map)
+                  .bindPopup(`${profile.full_name} (${profile.location})`);
+              }
+            })
+            .catch(err => console.error("Geocoding-Fehler:", err));
+        });
+      }
+    </script>
+  </body>
 </html>
