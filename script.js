@@ -1,5 +1,7 @@
-const supabaseClient = supabase.createClient('https://hdturwmfbkbcwdyyfzao.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkdHVyd21mYmtiY3dkeXlmemFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNTE5NjMsImV4cCI6MjA2MjgyNzk2M30.4skXOC9ojcKNiYo5q0ZkChYyx28z_mkI5CxNz31bofI');
-
+const supabaseClient = supabase.createClient(
+  'https://hdturwmfbkbcwdyyfzao.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkdHVyd21mYmtiY3dkeXlmemFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNTE5NjMsImV4cCI6MjA2MjgyNzk2M30.4skXOC9ojcKNiYo5q0ZkChYyx28z_mkI5CxNz31bofI'
+);
 
 // DOM Elements
 const loginBtn = document.getElementById('login-btn');
@@ -55,6 +57,7 @@ saveProfileBtn.addEventListener('click', async () => {
   if (error) showMessage(error.message);
   else {
     showMessage("Profil gespeichert!");
+    await loadProfile(); // aktualisierte Anzeige
     loadUsers();
     loadSitters();
   }
@@ -140,9 +143,33 @@ async function loadUser() {
   document.getElementById('page-select').classList.remove('hidden');
   document.getElementById('profile-page').classList.remove('hidden');
 
+  await loadProfile(); // Profil anzeigen
   loadMyPets();
   loadUsers();
   loadSitters();
+}
+
+// 🔄 Profil laden und anzeigen
+async function loadProfile() {
+  const user = (await supabaseClient.auth.getUser()).data.user;
+  if (!user) return;
+
+  const { data, error } = await supabaseClient
+    .from('profiles')
+    .select('*')
+    .eq('user_id', user.id)
+    .single();
+
+  if (error) {
+    console.warn("Profil nicht gefunden oder Fehler:", error);
+    return;
+  }
+
+  // Felder befüllen
+  document.getElementById('age').value = data.age || '';
+  document.getElementById('location').value = data.location || '';
+  document.getElementById('gender').value = data.gender || '';
+  document.getElementById('role').value = data.role || '';
 }
 
 // Eigene Tiere laden
