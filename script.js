@@ -1,119 +1,175 @@
-// Supabase Initialisierung
 const supabaseClient = supabase.createClient(
-  'https://YOUR_PROJECT_ID.supabase.co',
-  'YOUR_PUBLIC_ANON_KEY'
+  'https://hdturwmfbkbcwdyyfzao.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkdHVyd21mYmtiY3dkeXlmemFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNTE5NjMsImV4cCI6MjA2MjgyNzk2M30.4skXOC9ojcKNiYo5q0ZkChYyx28z_mkI5CxNz31bofI'
 );
+
+// DOM Elements
+const loginBtn = document.getElementById('login-btn');
+const signupBtn = document.getElementById('signup-btn');
+const saveProfileBtn = document.getElementById('save-profile');
+const pageSelect = document.getElementById('page-select');
+const petForm = document.getElementById('pet-form');
+const petList = document.getElementById('pet-list');
 
 let currentUserId = null;
 
-// Login
-document.getElementById('login-btn').addEventListener('click', async () => {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
+// Info anzeigen
+function showMessage(msg) {
+  const box = document.getElementById('message-box');
+  box.textContent = msg;
+  box.classList.remove('hidden');
+  setTimeout(() => box.classList.add('hidden'), 4000);
+}
 
-  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if (error) {
-    alert('Login fehlgeschlagen: ' + error.message);
-  } else {
-    loadUser();
-  }
+// Login
+loginBtn.addEventListener('click', async () => {
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email: email.value,
+    password: password.value,
+  });
+  if (error) showMessage(error.message);
+  else loadUser();
 });
 
 // Registrierung
-document.getElementById('signup-btn').addEventListener('click', async () => {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-
-  const { error } = await supabaseClient.auth.signUp({ email, password });
-  if (error) {
-    alert('Registrierung fehlgeschlagen: ' + error.message);
-  } else {
-    alert('Registrierung erfolgreich! Bitte einloggen.');
-  }
+signupBtn.addEventListener('click', async () => {
+  const { error } = await supabaseClient.auth.signUp({
+    email: email.value,
+    password: password.value,
+  });
+  if (error) showMessage(error.message);
+  else showMessage("Registrierung erfolgreich! Bitte einloggen.");
 });
 
 // Profil speichern
-document.getElementById('save-profile').addEventListener('click', async () => {
-  const fullName = document.getElementById('full-name').value;
-  const age = document.getElementById('age').value;
-  const location = document.getElementById('location').value;
-  const gender = document.getElementById('gender').value;
-  const role = document.getElementById('role').value;
+saveProfileBtn.addEventListener('click', async () => {
+  const user = (await supabaseClient.auth.getUser()).data.user;
+  if (!user) return;
 
-  const { error } = await supabaseClient
-    .from('profiles')
-    .upsert([{ id: currentUserId, full_name: fullName, age, location, gender, role }]);
+  const { error } = await supabaseClient.from('profiles').upsert({
+    user_id: user.id,
+    age: age.value,
+    location: location.value,
+    gender: gender.value,
+    role: role.value,
+  });
 
-  if (error) {
-    alert('Fehler beim Speichern des Profils');
-  } else {
-    alert('Profil gespeichert!');
+  if (error) showMessage(error.message);
+  else {
+    showMessage("Profil gespeichert!");
+    await loadProfile(); // aktualisierte Anzeige
     loadUsers();
     loadSitters();
   }
 });
 
+// Navigation
+pageSelect.addEventListener('change', () => {
+  document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+  document.getElementById(pageSelect.value).classList.remove('hidden');
+});
+
 // Tier hinzufügen
-document.getElementById('pet-form').addEventListener('submit', async (e) => {
+petForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  const petName = document.getElementById('pet-name').value;
-  const petType = document.getElementById('pet-type').value;
+  const name = document.getElementById('pet-name').value;
+  const type = document.getElementById('pet-type').value;
   const description = document.getElementById('pet-description').value;
-  const petRole = document.getElementById('pet-role').value;
+  const role = document.getElementById('pet-role').value;
+  const file = document.getElementById('pet-image').files[0];
 
-  const { error } = await supabaseClient.from('pets').insert([
-    {
-      user_id: currentUserId,
-      name: petName,
-      type: petType,
-      description: description,
-      role: petRole
+  let imageUrl = null;
+
+  const user = (await supabaseClient.auth.getUser()).data.user;
+  if (!user) {
+    showMessage("Nicht eingeloggt.");
+    return;
+  }
+  currentUserId = user.id;
+
+  // Bild hochladen (wenn vorhanden)
+  if (file) {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${crypto.randomUUID()}.${fileExt}`;
+    const filePath = `${currentUserId}/${fileName}`;
+
+    const { error: uploadError } = await supabaseClient
+      .storage
+      .from('pet-images')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      console.error("❌ Upload-Fehler:", uploadError);
+      showMessage("Fehler beim Hochladen: " + uploadError.message);
+      return;
     }
-  ]);
+
+    const { data } = supabaseClient
+      .storage
+      .from('pet-images')
+      .getPublicUrl(filePath);
+
+    imageUrl = data.publicUrl;
+  }
+
+  // Eintrag speichern (RLS-konform!)
+  const { error } = await supabaseClient.from('pets').insert({
+    owner_id: currentUserId,
+    name,
+    pet_type: type,
+    description,
+    role,
+    image_url: imageUrl
+  });
 
   if (error) {
-    alert('Fehler beim Hinzufügen des Tiers');
+    console.error("❌ Fehler beim Einfügen:", error);
+    showMessage("Fehler beim Speichern: " + error.message);
   } else {
-    alert('Tier hinzugefügt!');
+    showMessage("Tier hinzugefügt!");
+    petForm.reset();
     loadMyPets();
   }
 });
 
-// Seite laden
+// Nutzer laden nach Login
 async function loadUser() {
-  const userData = await supabaseClient.auth.getUser();
-  const user = userData.data.user;
+  const user = (await supabaseClient.auth.getUser()).data.user;
   if (!user) return;
-
   currentUserId = user.id;
 
   document.getElementById('auth-section').classList.add('hidden');
   document.getElementById('page-select').classList.remove('hidden');
   document.getElementById('profile-page').classList.remove('hidden');
 
-  await loadProfile();
+  await loadProfile(); // Profil anzeigen
   loadMyPets();
   loadUsers();
   loadSitters();
-  initializeMap();
 }
 
-// Profil laden
+// 🔄 Profil laden und anzeigen
 async function loadProfile() {
-  const { data } = await supabaseClient
+  const user = (await supabaseClient.auth.getUser()).data.user;
+  if (!user) return;
+
+  const { data, error } = await supabaseClient
     .from('profiles')
     .select('*')
-    .eq('id', currentUserId)
+    .eq('user_id', user.id)
     .single();
 
-  if (data) {
-    document.getElementById('full-name').value = data.full_name || '';
-    document.getElementById('age').value = data.age || '';
-    document.getElementById('location').value = data.location || '';
-    document.getElementById('gender').value = data.gender || '';
-    document.getElementById('role').value = data.role || '';
+  if (error) {
+    console.warn("Profil nicht gefunden oder Fehler:", error);
+    return;
   }
+
+  // Felder befüllen
+  document.getElementById('age').value = data.age || '';
+  document.getElementById('location').value = data.location || '';
+  document.getElementById('gender').value = data.gender || '';
+  document.getElementById('role').value = data.role || '';
 }
 
 // Eigene Tiere laden
@@ -121,72 +177,65 @@ async function loadMyPets() {
   const { data } = await supabaseClient
     .from('pets')
     .select('*')
-    .eq('user_id', currentUserId);
+    .eq('owner_id', currentUserId);
 
-  const list = document.getElementById('pet-list');
-  list.innerHTML = '';
+  petList.innerHTML = '';
+  data.forEach(pet => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <strong>${pet.name}</strong> (${pet.pet_type}) – ${pet.role}<br/>
+      ${pet.description}<br/>
+      ${pet.image_url ? `<img src="${pet.image_url}" alt="Tierbild" />` : ''}
+      <button class="delete-btn" data-id="${pet.id}">🗑️</button>
+    `;
+    petList.appendChild(li);
+  });
 
-  data.forEach((pet) => {
-    const item = document.createElement('li');
-    item.textContent = `${pet.name} (${pet.type}) – ${pet.description}`;
-    list.appendChild(item);
+  document.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-id');
+      await supabaseClient.from('pets').delete().eq('id', id);
+      loadMyPets();
+    });
   });
 }
 
-// Nutzer laden
+// Suchende anzeigen
 async function loadUsers() {
   const { data } = await supabaseClient
-    .from('profiles')
+    .from('pets')
     .select('*')
     .eq('role', 'owner');
 
   const list = document.getElementById('users-list');
   list.innerHTML = '';
-
-  data.forEach((user) => {
-    const item = document.createElement('li');
-    item.textContent = `${user.full_name} (${user.location})`;
-    list.appendChild(item);
+  data.forEach(user => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <strong>${user.name}</strong> sucht für ${user.pet_type}<br/>
+      ${user.description}<br/>
+      ${user.image_url ? `<img src="${user.image_url}" />` : ''}
+    `;
+    list.appendChild(li);
   });
 }
 
-// Sitter laden
+// Anbieter anzeigen
 async function loadSitters() {
   const { data } = await supabaseClient
-    .from('profiles')
+    .from('pets')
     .select('*')
     .eq('role', 'sitter');
 
   const list = document.getElementById('sitters-list');
   list.innerHTML = '';
-
-  data.forEach((user) => {
-    const item = document.createElement('li');
-    item.textContent = `${user.full_name} (${user.location})`;
-    list.appendChild(item);
+  data.forEach(user => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <strong>${user.name}</strong> bietet Betreuung für ${user.pet_type}<br/>
+      ${user.description}<br/>
+      ${user.image_url ? `<img src="${user.image_url}" />` : ''}
+    `;
+    list.appendChild(li);
   });
 }
-
-// Seitenwechsel Dropdown
-document.getElementById('page-select').addEventListener('change', (e) => {
-  const pages = document.querySelectorAll('.page');
-  pages.forEach((page) => page.classList.add('hidden'));
-
-  const selectedPage = document.getElementById(e.target.value);
-  if (selectedPage) selectedPage.classList.remove('hidden');
-});
-
-// Karte initialisieren
-function initializeMap() {
-  const map = L.map('map').setView([51.1657, 10.4515], 6);
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap-Mitwirkende'
-  }).addTo(map);
-
-  // Beispiel-Marker
-  L.marker([52.52, 13.405]).addTo(map).bindPopup('Berlin');
-}
-
-// Beim Start prüfen ob User eingeloggt ist
-loadUser();
