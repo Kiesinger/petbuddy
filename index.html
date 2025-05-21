@@ -4,24 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Petbuddy</title>
-  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
     <img src="logo.png" alt="Petbuddy Logo" class="logo" />
     <h1>Petbuddy</h1>
 
-    <!-- Navigation -->
-    <select id="page-select" class="nav-dropdown hidden">
-      <option value="profile-page">👤 Mein Profil</option>
-      <option value="users-page">🔎 Suchende</option>
-      <option value="sitters-page">🐾 Anbieter</option>
-    </select>
-
     <!-- Nachrichtenbox -->
     <div id="message-box" class="hidden"></div>
 
-    <!-- ✅ Nur das hier ist beim Start sichtbar -->
+    <!-- Authentifizierung -->
     <div id="auth-section">
       <input type="email" id="email" placeholder="Email" />
       <input type="password" id="password" placeholder="Passwort" />
@@ -29,7 +22,12 @@
       <button id="signup-btn">Registrieren</button>
     </div>
 
-    <!-- ⛔️ Wird beim Start NICHT angezeigt – erst nach Login sichtbar -->
+    <!-- Navigation -->
+    <select id="page-select" class="nav-dropdown hidden">
+      <option value="profile-page">👤 Mein Profil</option>
+    </select>
+
+    <!-- Profilseite -->
     <div id="profile-page" class="page hidden">
       <h2>Mein Profil</h2>
       <input type="text" id="name" placeholder="Name" />
@@ -47,38 +45,10 @@
         <option value="owner">Tierbesitzer (Nutzer)</option>
       </select>
       <button id="save-profile">Profil speichern</button>
-
-      <!-- Tierformular -->
-      <h3>Meine Tiere</h3>
-      <form id="pet-form">
-        <input type="text" id="pet-name" placeholder="Name des Tiers" required />
-        <input type="text" id="pet-type" placeholder="Tierart" required />
-        <textarea id="pet-description" placeholder="Beschreibung" rows="3"></textarea>
-        <select id="pet-role">
-          <option value="owner">Ich suche einen Sitter</option>
-          <option value="sitter">Ich biete Sitter-Dienste</option>
-        </select>
-        <input type="file" id="pet-image" accept="image/*" />
-        <button type="submit">Tier hinzufügen</button>
-      </form>
-
-      <ul id="pet-list"></ul>
-    </div>
-
-    <!-- Weitere Seiten (auch versteckt beim Start) -->
-    <div id="users-page" class="page hidden">
-      <h2>Suchende (Nutzer)</h2>
-      <ul id="users-list"></ul>
-    </div>
-
-    <div id="sitters-page" class="page hidden">
-      <h2>Anbieter (Sitter)</h2>
-      <ul id="sitters-list"></ul>
     </div>
   </div>
 
-  <!-- Supabase & Script -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="script.js"></script>
 </body>
 </html>
