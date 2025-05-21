@@ -20,7 +20,6 @@
   </script>
 
   <style>
-    /* Nur falls du es nicht in style.css packen willst */
     #map {
       height: 400px;
       margin-top: 20px;
@@ -53,51 +52,43 @@
     </div>
 
     <!-- Profilseite -->
-  <div id="profile-page" class="page hidden">
-  <h2>Mein Profil</h2>
+    <div id="profile-page" class="page hidden">
+      <h2>Mein Profil</h2>
+      <label for="full-name">Name:</label>
+      <input type="text" id="full-name" name="full-name" placeholder="Name" />
+      <input type="text" id="age" placeholder="Alter" />
+      <input type="text" id="location" placeholder="Ort" />
+      <select id="gender">
+        <option value="">Geschlecht wählen</option>
+        <option value="Männlich">Männlich</option>
+        <option value="Weiblich">Weiblich</option>
+        <option value="Divers">Divers</option>
+      </select>
+      <select id="role">
+        <option value="">Ich bin ein...</option>
+        <option value="sitter">Sitter (Anbieter)</option>
+        <option value="owner">Tierbesitzer (Nutzer)</option>
+      </select>
+      <button id="save-profile">Profil speichern</button>
 
-  <label for="full-name">Name:</label>
-  <input type="text" id="full-name" name="full-name" placeholder="Name" />
-
-  <input type="text" id="age" placeholder="Alter" />
-  <input type="text" id="location" placeholder="Ort" />
-
-  <select id="gender">
-    <option value="">Geschlecht wählen</option>
-    <option value="Männlich">Männlich</option>
-    <option value="Weiblich">Weiblich</option>
-    <option value="Divers">Divers</option>
-  </select>
-
-  <select id="role">
-    <option value="">Ich bin ein...</option>
-    <option value="sitter">Sitter (Anbieter)</option>
-    <option value="owner">Tierbesitzer (Nutzer)</option>
-  </select>
-
-  <button id="save-profile">Profil speichern</button>
-
-  <h3>Meine Tiere</h3>
-  <form id="pet-form">
-    <input type="text" id="pet-name" placeholder="Name des Tiers" required />
-    <input type="text" id="pet-type" placeholder="Tierart" required />
-    <textarea id="pet-description" placeholder="Beschreibung" rows="3"></textarea>
-    <select id="pet-role">
-      <option value="owner">Ich suche einen Sitter</option>
-      <option value="sitter">Ich biete Sitter-Dienste</option>
-    </select>
-    <input type="file" id="pet-image" accept="image/*" />
-    <button type="submit">Tier hinzufügen</button>
-  </form>
-
-  <ul id="pet-list"></ul>
-</div>
-
-
-      <!-- 🌍 Karten-Container -->
-      <h3>Standorte</h3>
-      <div id="map"></div>
+      <h3>Meine Tiere</h3>
+      <form id="pet-form">
+        <input type="text" id="pet-name" placeholder="Name des Tiers" required />
+        <input type="text" id="pet-type" placeholder="Tierart" required />
+        <textarea id="pet-description" placeholder="Beschreibung" rows="3"></textarea>
+        <select id="pet-role">
+          <option value="owner">Ich suche einen Sitter</option>
+          <option value="sitter">Ich biete Sitter-Dienste</option>
+        </select>
+        <input type="file" id="pet-image" accept="image/*" />
+        <button type="submit">Tier hinzufügen</button>
+      </form>
+      <ul id="pet-list"></ul>
     </div>
+
+    <!-- 🌍 Karten-Container -->
+    <h3>Standorte</h3>
+    <div id="map"></div>
 
     <!-- Nutzerliste -->
     <div id="users-page" class="page hidden">
@@ -114,6 +105,52 @@
 
   <!-- Supabase & Script -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    const supabaseClient = supabase.createClient(
+      'https://hdturwmfbkbcwdyyfzao.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+    );
+
+    let currentUserId = null;
+
+    // 🌍 Karte initialisieren
+    let map = L.map('map').setView([51.1657, 10.4515], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap-Mitwirkende'
+    }).addTo(map);
+
+    async function updateMapMarkers() {
+      const { data, error } = await supabaseClient
+        .from('profiles')
+        .select('full_name, location');
+
+      if (error) {
+        console.error("Fehler beim Laden der Standorte:", error);
+        return;
+      }
+
+      for (const user of data) {
+        if (!user.location) continue;
+        try {
+          const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(user.location)}`);
+          const results = await response.json();
+
+          if (results.length > 0) {
+            const { lat, lon } = results[0];
+            L.marker([lat, lon])
+              .addTo(map)
+              .bindPopup(`${user.full_name || 'Unbekannt'} (${user.location})`);
+          }
+        } catch (geoError) {
+          console.warn("Geokodierungsfehler für Ort:", user.location, geoError);
+        }
+      }
+    }
+
+    updateMapMarkers();
+
+    // Login-Logik (verkürzt, du kannst deinen vorhandenen Script-Teil nach unten hier einfügen)
+  </script>
   <script src="script.js"></script>
 </body>
 </html>
