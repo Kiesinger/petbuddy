@@ -48,7 +48,6 @@ saveProfileBtn.addEventListener('click', async () => {
 
   const { error } = await supabaseClient.from('profiles').upsert({
     user_id: user.id,
-    name: nam.value
     age: age.value,
     location: location.value,
     gender: gender.value,
@@ -167,7 +166,6 @@ async function loadProfile() {
   }
 
   // Felder befüllen
-  document.getElementById('name').value = data.name || '';
   document.getElementById('age').value = data.age || '';
   document.getElementById('location').value = data.location || '';
   document.getElementById('gender').value = data.gender || '';
