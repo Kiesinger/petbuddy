@@ -47,8 +47,7 @@ saveProfileBtn.addEventListener('click', async () => {
   if (!user) return;
 
   const { error } = await supabaseClient.from('profiles').upsert({
-    user_id: user.id,  
-    name: name.value
+    user_id: user.id,
     age: age.value,
     location: location.value,
     gender: gender.value,
