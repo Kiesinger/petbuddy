@@ -256,3 +256,13 @@ async function loadProfile() {
   document.getElementById('gender').value = data.gender || '';
   document.getElementById('role').value = data.role || '';
 }
+function initializeMap() {
+  const map = L.map('map').setView([51.1657, 10.4515], 6); // Mitte von Deutschland
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap-Mitwirkende'
+  }).addTo(map);
+
+  // Beispiel-Marker – kannst du später dynamisch machen
+  L.marker([52.52, 13.405]).addTo(map).bindPopup('Berlin');
+}
