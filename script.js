@@ -1,129 +1,192 @@
-<script>
-  const supabaseClient = supabase.createClient(
-    'https://tqrrmmbplwywmoyqdtui.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxcnJtbWJwbHd5d213b3lxZHR1aSIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzE1MzQyNDYxLCJleHAiOjE3NDY4Nzg0NjF9.kD1iN5yYH1Y7i5KJ8NNoa8HXvM4ZJUQz3JX7T9fuhB4'
-  );
+// Supabase Initialisierung
+const supabaseClient = supabase.createClient(
+  'https://YOUR_PROJECT_ID.supabase.co',
+  'YOUR_PUBLIC_ANON_KEY'
+);
 
-  async function checkSession() {
-    const {
-      data: { session },
-    } = await supabaseClient.auth.getSession();
+let currentUserId = null;
 
-    if (session) {
-      loadUser(session.user.id);
-    } else {
-      showLogin();
+// Login
+document.getElementById('login-btn').addEventListener('click', async () => {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if (error) {
+    alert('Login fehlgeschlagen: ' + error.message);
+  } else {
+    loadUser();
+  }
+});
+
+// Registrierung
+document.getElementById('signup-btn').addEventListener('click', async () => {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+
+  const { error } = await supabaseClient.auth.signUp({ email, password });
+  if (error) {
+    alert('Registrierung fehlgeschlagen: ' + error.message);
+  } else {
+    alert('Registrierung erfolgreich! Bitte einloggen.');
+  }
+});
+
+// Profil speichern
+document.getElementById('save-profile').addEventListener('click', async () => {
+  const fullName = document.getElementById('full-name').value;
+  const age = document.getElementById('age').value;
+  const location = document.getElementById('location').value;
+  const gender = document.getElementById('gender').value;
+  const role = document.getElementById('role').value;
+
+  const { error } = await supabaseClient
+    .from('profiles')
+    .upsert([{ id: currentUserId, full_name: fullName, age, location, gender, role }]);
+
+  if (error) {
+    alert('Fehler beim Speichern des Profils');
+  } else {
+    alert('Profil gespeichert!');
+    loadUsers();
+    loadSitters();
+  }
+});
+
+// Tier hinzufügen
+document.getElementById('pet-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const petName = document.getElementById('pet-name').value;
+  const petType = document.getElementById('pet-type').value;
+  const description = document.getElementById('pet-description').value;
+  const petRole = document.getElementById('pet-role').value;
+
+  const { error } = await supabaseClient.from('pets').insert([
+    {
+      user_id: currentUserId,
+      name: petName,
+      type: petType,
+      description: description,
+      role: petRole
     }
+  ]);
+
+  if (error) {
+    alert('Fehler beim Hinzufügen des Tiers');
+  } else {
+    alert('Tier hinzugefügt!');
+    loadMyPets();
   }
+});
 
-  async function login() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+// Seite laden
+async function loadUser() {
+  const userData = await supabaseClient.auth.getUser();
+  const user = userData.data.user;
+  if (!user) return;
 
-    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  currentUserId = user.id;
 
-    if (error) {
-      alert('Fehler beim Login: ' + error.message);
-    } else {
-      checkSession();
-    }
+  document.getElementById('auth-section').classList.add('hidden');
+  document.getElementById('page-select').classList.remove('hidden');
+  document.getElementById('profile-page').classList.remove('hidden');
+
+  await loadProfile();
+  loadMyPets();
+  loadUsers();
+  loadSitters();
+  initializeMap();
+}
+
+// Profil laden
+async function loadProfile() {
+  const { data } = await supabaseClient
+    .from('profiles')
+    .select('*')
+    .eq('id', currentUserId)
+    .single();
+
+  if (data) {
+    document.getElementById('full-name').value = data.full_name || '';
+    document.getElementById('age').value = data.age || '';
+    document.getElementById('location').value = data.location || '';
+    document.getElementById('gender').value = data.gender || '';
+    document.getElementById('role').value = data.role || '';
   }
+}
 
-  async function logout() {
-    await supabaseClient.auth.signOut();
-    showLogin();
-  }
+// Eigene Tiere laden
+async function loadMyPets() {
+  const { data } = await supabaseClient
+    .from('pets')
+    .select('*')
+    .eq('user_id', currentUserId);
 
-  function showLogin() {
-    document.getElementById('login-form').style.display = 'block';
-    document.getElementById('profile-form').style.display = 'none';
-    document.getElementById('map').style.display = 'none';
-  }
+  const list = document.getElementById('pet-list');
+  list.innerHTML = '';
 
-  function showProfile() {
-    document.getElementById('login-form').style.display = 'none';
-    document.getElementById('profile-form').style.display = 'block';
-    document.getElementById('map').style.display = 'block';
-  }
+  data.forEach((pet) => {
+    const item = document.createElement('li');
+    item.textContent = `${pet.name} (${pet.type}) – ${pet.description}`;
+    list.appendChild(item);
+  });
+}
 
-  async function loadUser(userId) {
-    const { data, error } = await supabaseClient
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+// Nutzer laden
+async function loadUsers() {
+  const { data } = await supabaseClient
+    .from('profiles')
+    .select('*')
+    .eq('role', 'owner');
 
-    if (data) {
-      document.getElementById('full-name').value = data.full_name || '';
-      document.getElementById('bio').value = data.bio || '';
-      document.getElementById('location').value = data.location || '';
-      document.getElementById('website').value = data.website || '';
-    }
+  const list = document.getElementById('users-list');
+  list.innerHTML = '';
 
-    showProfile();
-    initializeMap(); // Karte laden
-  }
+  data.forEach((user) => {
+    const item = document.createElement('li');
+    item.textContent = `${user.full_name} (${user.location})`;
+    list.appendChild(item);
+  });
+}
 
-  async function saveProfile() {
-    const {
-      data: { user },
-    } = await supabaseClient.auth.getUser();
+// Sitter laden
+async function loadSitters() {
+  const { data } = await supabaseClient
+    .from('profiles')
+    .select('*')
+    .eq('role', 'sitter');
 
-    const updates = {
-      id: user.id,
-      full_name: document.getElementById('full-name').value,
-      bio: document.getElementById('bio').value,
-      location: document.getElementById('location').value,
-      website: document.getElementById('website').value,
-      updated_at: new Date(),
-    };
+  const list = document.getElementById('sitters-list');
+  list.innerHTML = '';
 
-    const { error } = await supabaseClient.from('profiles').upsert(updates);
+  data.forEach((user) => {
+    const item = document.createElement('li');
+    item.textContent = `${user.full_name} (${user.location})`;
+    list.appendChild(item);
+  });
+}
 
-    if (error) {
-      alert('Fehler beim Speichern: ' + error.message);
-    } else {
-      alert('Profil gespeichert!');
-      initializeMap(); // Karte neu laden nach dem Speichern
-    }
-  }
+// Seitenwechsel Dropdown
+document.getElementById('page-select').addEventListener('change', (e) => {
+  const pages = document.querySelectorAll('.page');
+  pages.forEach((page) => page.classList.add('hidden'));
 
-  // 🔄 HIER ist die NEUE Map-Funktion
-  async function initializeMap() {
-    const mapContainer = document.getElementById('map');
-    mapContainer.innerHTML = ''; // Reset bei erneutem Aufruf
-    const map = L.map('map').setView([51.1657, 10.4515], 6); // Deutschland-Zentrum
+  const selectedPage = document.getElementById(e.target.value);
+  if (selectedPage) selectedPage.classList.remove('hidden');
+});
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap-Mitwirkende',
-    }).addTo(map);
+// Karte initialisieren
+function initializeMap() {
+  const map = L.map('map').setView([51.1657, 10.4515], 6);
 
-    const { data: profiles, error } = await supabaseClient
-      .from('profiles')
-      .select('full_name, location');
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap-Mitwirkende'
+  }).addTo(map);
 
-    if (error) {
-      console.error("Fehler beim Laden der Standorte:", error);
-      return;
-    }
+  // Beispiel-Marker
+  L.marker([52.52, 13.405]).addTo(map).bindPopup('Berlin');
+}
 
-    profiles.forEach(profile => {
-      if (!profile.location) return;
-
-      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(profile.location)}`)
-        .then(res => res.json())
-        .then(locations => {
-          if (locations && locations.length > 0) {
-            const { lat, lon } = locations[0];
-            L.marker([lat, lon])
-              .addTo(map)
-              .bindPopup(`${profile.full_name} (${profile.location})`);
-          }
-        })
-        .catch(err => console.error("Geocoding-Fehler:", err));
-    });
-  }
-
-  // Starte beim Laden der Seite
-  checkSession();
-</script>
+// Beim Start prüfen ob User eingeloggt ist
+loadUser();
