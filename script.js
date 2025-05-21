@@ -216,8 +216,9 @@ async function loadUser() {
   loadMyPets();
   loadUsers();
   loadSitters();
+    initializeMap(); // 🌍 Karte anzeigen
 }
-
+  
 
 // Anbieter anzeigen
 async function loadSitters() {
@@ -266,4 +267,4 @@ function initializeMap() {
   // Beispiel-Marker – kannst du später dynamisch machen
   L.marker([52.52, 13.405]).addTo(map).bindPopup('Berlin');
 }
-  initializeMap(); // 🌍 Karte anzeigen
+
