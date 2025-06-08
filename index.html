@@ -3,116 +3,99 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Petbuddy</title>
-  <link rel="stylesheet" href="style.css"/>
+  <title>Tierbetreuung Plattform</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <div class="container">
-    <img src="logo.png" alt="Petbuddy Logo" class="logo" />
-    <h1>Petbuddy</h1>
+  <h1>🐾 Tierbetreuung</h1>
 
-    <!-- Navigation -->
-    <select id="page-select" class="nav-dropdown hidden">
-      <option value="profile-page">👤 Mein Profil</option>
-      <option value="users-page">🔎 Suchende</option>
-      <option value="sitters-page">🐾 Anbieter</option>
-      <option value="filter-section">🔍 Filter</option>
-      <option value="chat-section">💬 Nachrichten</option>
+  <!-- Login & Registrierung -->
+  <section id="auth-section">
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Passwort" />
+    <button id="login-btn">Login</button>
+    <button id="signup-btn">Registrieren</button>
+  </section>
+
+  <!-- Navigation -->
+  <div id="page-select" class="hidden">
+    <select>
+      <option value="profile-page">Profil</option>
+      <option value="pets-page">Meine Tiere</option>
+      <option value="search-page">Suchen</option>
+      <option value="chat-page">Chat</option>
     </select>
-
-    <!-- Nachrichtenbox -->
-    <div id="message-box" class="hidden"></div>
-
-    <!-- Authentifizierung -->
-    <div id="auth-section">
-      <input type="email" id="email" placeholder="Email" />
-      <input type="password" id="password" placeholder="Passwort" />
-      <button id="login-btn">Login</button>
-      <button id="signup-btn">Registrieren</button>
-    </div>
-
-    <!-- Profilseite -->
-    <div id="profile-page" class="page hidden">
-      <h2>Mein Profil</h2>
-      <input type="text" id="name" placeholder="Name" />
-      <input type="text" id="age" placeholder="Alter" />
-      <input type="text" id="location" placeholder="Ort" />
-      <select id="gender">
-        <option value="">Geschlecht wählen</option>
-        <option value="Männlich">Männlich</option>
-        <option value="Weiblich">Weiblich</option>
-        <option value="Divers">Divers</option>
-      </select>
-      <select id="role">
-        <option value="">Ich bin ein...</option>
-        <option value="sitter">Sitter (Anbieter)</option>
-        <option value="owner">Tierbesitzer (Nutzer)</option>
-      </select>
-
-      <h3>Verfügbarkeit</h3>
-      <input type="date" id="available-from" placeholder="Verfügbar ab" />
-      <input type="date" id="available-to" placeholder="Verfügbar bis" />
-
-      <h3>Profilbild</h3>
-      <input type="file" id="profile-image" accept="image/*" />
-      <br/>
-      <img id="profile-preview" src="" alt="Profilbild" style="max-width: 150px; display: block; margin: 10px 0;" />
-
-      <button id="save-profile">Profil speichern</button>
-
-      <h3>Meine Tiere</h3>
-      <form id="pet-form">
-        <input type="text" id="pet-name" placeholder="Name des Tiers" required />
-        <input type="text" id="pet-type" placeholder="Tierart" required />
-        <textarea id="pet-description" placeholder="Beschreibung" rows="3"></textarea>
-        <select id="pet-role">
-          <option value="owner">Ich suche einen Sitter</option>
-          <option value="sitter">Ich biete Sitter-Dienste</option>
-        </select>
-        <input type="file" id="pet-image" accept="image/*" />
-        <button type="submit">Tier hinzufügen</button>
-      </form>
-
-      <ul id="pet-list"></ul>
-    </div>
-
-    <!-- Nutzerliste -->
-    <div id="users-page" class="page hidden">
-      <h2>Suchende (Nutzer)</h2>
-      <ul id="users-list"></ul>
-    </div>
-
-    <!-- Anbieter -->
-    <div id="sitters-page" class="page hidden">
-      <h2>Anbieter (Sitter)</h2>
-      <ul id="sitters-list"></ul>
-    </div>
-
-    <!-- Filterfunktion -->
-    <div id="filter-section" class="page hidden">
-      <h2>🔍 Filter</h2>
-      <input type="text" id="filter-location" placeholder="Ort" />
-      <select id="filter-pet-type">
-        <option value="">Tierart wählen</option>
-        <option value="Hund">Hund</option>
-        <option value="Katze">Katze</option>
-        <option value="Vogel">Vogel</option>
-      </select>
-      <button id="apply-filter">Filter anwenden</button>
-      <ul id="filtered-list"></ul>
-    </div>
-
-    <!-- Chatbereich -->
-    <div id="chat-section" class="page hidden">
-      <h2>💬 Nachrichten</h2>
-      <select id="chat-user-select"></select>
-      <div id="chat-messages" style="min-height: 150px; border: 1px solid #ccc; padding: 10px; margin: 10px 0;"></div>
-      <textarea id="chat-input" placeholder="Nachricht..." rows="2"></textarea>
-      <button id="send-chat-btn">Senden</button>
-    </div>
+    <button id="logout-btn" class="hidden">Logout</button>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <!-- Nachricht -->
+  <div id="message-box" class="hidden"></div>
+
+  <!-- Seiten -->
+  <section id="profile-page" class="page hidden">
+    <h2>Profil</h2>
+    <input type="text" id="name" placeholder="Dein Name" />
+    <input type="text" id="age" placeholder="Alter" />
+    <input type="text" id="location" placeholder="Ort" />
+    <input type="text" id="gender" placeholder="Geschlecht" />
+    <input type="text" id="role" placeholder="Rolle (z. B. Sitter)" />
+    <label>Verfügbar von: <input type="date" id="available-from" /></label>
+    <label>Verfügbar bis: <input type="date" id="available-to" /></label>
+    <label>Profilbild: <input type="file" id="profile-image" accept="image/*" /></label>
+    <img id="profile-preview" style="max-width: 150px; display: block; margin-top: 10px;" />
+    <button id="save-profile">Speichern</button>
+  </section>
+
+  <section id="pets-page" class="page hidden">
+    <h2>Meine Tiere</h2>
+    <form id="pet-form">
+      <input type="text" id="pet-name" placeholder="Name" required />
+      <input type="text" id="pet-type" placeholder="Tierart (z. B. Hund)" required />
+      <input type="text" id="pet-description" placeholder="Beschreibung" />
+      <select id="pet-role">
+        <option value="owner">Ich suche Betreuung</option>
+        <option value="sitter">Ich biete Betreuung</option>
+      </select>
+      <input type="file" id="pet-image" accept="image/*" />
+      <button type="submit">Tier speichern</button>
+    </form>
+    <ul id="pet-list"></ul>
+  </section>
+
+  <section id="search-page" class="page hidden">
+    <h2>Suche nach Betreuung</h2>
+
+    <label for="filter-location">Ort:</label>
+    <select id="filter-location">
+      <option value="">Alle Orte</option>
+    </select>
+
+    <label for="filter-pet-type">Tierart:</label>
+    <select id="filter-pet-type">
+      <option value="">Alle Tierarten</option>
+    </select>
+
+    <button id="apply-filter">Filtern</button>
+    <ul id="filtered-list"></ul>
+
+    <h3>Tierbesitzer</h3>
+    <ul id="users-list"></ul>
+
+    <h3>Tierbetreuer</h3>
+    <ul id="sitters-list"></ul>
+  </section>
+
+  <section id="chat-page" class="page hidden">
+    <h2>Nachrichten</h2>
+    <label>Empfänger:
+      <select id="chat-user-select"></select>
+    </label>
+    <div id="chat-messages" style="border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: scroll;"></div>
+    <input type="text" id="chat-input" placeholder="Nachricht schreiben…" />
+    <button id="send-chat-btn">Senden</button>
+  </section>
+
   <script src="script.js"></script>
 </body>
 </html>
