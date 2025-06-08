@@ -50,71 +50,82 @@ logoutBtn.addEventListener('click', async () => {
 });
 
 // --- Profile speichern ---
-saveProfileBtn.addEventListener('click', async () => {
-  const user = (await supabaseClient.auth.getUser()).data.user;
-  if (!user) return;
-
-  // ✨ Eingabefelder explizit über DOM holen
-  const profileName = document.getElementById('name').value.trim();
-  const profileAge = document.getElementById('age').value.trim();
-  const profileLocation = document.getElementById('location').value.trim();
-  const profileGender = document.getElementById('gender').value.trim();
-  const profileRole = document.getElementById('role').value.trim();
-  const availableFrom = document.getElementById('available-from').value;
-  const availableTo = document.getElementById('available-to').value;
-
-  // Prüfen, ob Pflichtfelder leer sind
-  if (!profileName || !profileLocation) {
-    return showMessage("Name und Ort dürfen nicht leer sein.");
+// --- Profile speichern + Session laden ---
+window.addEventListener('DOMContentLoaded', async () => {
+  // Session prüfen
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session && session.user) {
+    await loadUser();
   }
 
-  // 🔽 Profilbild-Upload vorbereiten
-  let imageUrl = null;
-  const file = document.getElementById('profile-image').files[0];
-  if (file) {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}.${fileExt}`;
-    const { error: uploadError } = await supabaseClient.storage
-      .from('profile-images')
-      .upload(fileName, file, {
-        upsert: true,
-        contentType: file.type
-      });
+  // Profil speichern-Button registrieren
+  const saveProfileBtn = document.getElementById('save-profile');
 
-    if (uploadError) {
-      return showMessage('Fehler beim Hochladen: ' + uploadError.message);
+  saveProfileBtn.addEventListener('click', async () => {
+    const user = (await supabaseClient.auth.getUser()).data.user;
+    if (!user) return;
+
+    const profileName = document.getElementById('name').value.trim();
+    const profileAge = document.getElementById('age').value.trim();
+    const profileLocation = document.getElementById('location').value.trim();
+    const profileGender = document.getElementById('gender').value.trim();
+    const profileRole = document.getElementById('role').value.trim();
+    const availableFrom = document.getElementById('available-from').value;
+    const availableTo = document.getElementById('available-to').value;
+   const file = document.getElementById('profile-image').files[0];
+    console.log("Eingegeben:", { profileName, profileLocation, file });
+
+    if (!profileName || !profileLocation) {
+      return showMessage("Name und Ort dürfen nicht leer sein.");
     }
 
-    const { data: publicData } = supabaseClient.storage
-      .from('profile-images')
-      .getPublicUrl(fileName);
-    imageUrl = publicData.publicUrl;
-  }
+    let imageUrl = null;
+   
+    if (file) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}.${fileExt}`;
+      const { error: uploadError } = await supabaseClient.storage
+        .from('profile-images')
+        .upload(fileName, file, {
+          upsert: true,
+          contentType: file.type
+        });
 
-  // 🔄 Profil speichern
-  const { error } = await supabaseClient.from('profiles').upsert({
-    user_id: user.id,
-    name: profileName,
-    age: profileAge,
-    location: profileLocation,
-    gender: profileGender,
-    role: profileRole,
-    available_from: availableFrom,
-    available_to: availableTo,
-    image_url: imageUrl
+      if (uploadError) {
+        return showMessage('Fehler beim Hochladen: ' + uploadError.message);
+      }
+
+      const { data: publicData } = supabaseClient.storage
+        .from('profile-images')
+        .getPublicUrl(fileName);
+      imageUrl = publicData.publicUrl;
+    }
+
+    const { error } = await supabaseClient.from('profiles').upsert({
+      user_id: user.id,
+      name: profileName,
+      age: profileAge,
+      location: profileLocation,
+      gender: profileGender,
+      role: profileRole,
+      available_from: availableFrom,
+      available_to: availableTo,
+      image_url: imageUrl
+    });
+
+    if (error) {
+      showMessage(error.message);
+    } else {
+      showMessage("Profil gespeichert!");
+      await loadProfile();
+      loadUsers();
+      loadSitters();
+      loadBuddies();
+      populateFilterOptions();
+    }
   });
-
-  if (error) {
-    showMessage(error.message);
-  } else {
-    showMessage("Profil gespeichert!");
-    await loadProfile();
-    loadUsers();
-    loadSitters();
-    loadBuddies();
-    populateFilterOptions();
-  }
 });
+
 
 // --- Seitenwechsel ---
 pageSelect.addEventListener('change', () => {
@@ -391,11 +402,3 @@ async function loadBuddies() {
     list.appendChild(li);
   });
 }
-
-// --- Sessionprüfung ---
-window.addEventListener('DOMContentLoaded', async () => {
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if (session && session.user) {
-    loadUser();
-  }
-});
