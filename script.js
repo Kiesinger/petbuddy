@@ -54,21 +54,21 @@ saveProfileBtn.addEventListener('click', async () => {
   const user = (await supabaseClient.auth.getUser()).data.user;
   if (!user) return;
 
-  // Werte sammeln & trimmen
-  const profileName = name.value?.trim() || '';
-  const profileAge = age.value?.trim() || '';
-  const profileLocation = location.value?.trim() || '';
-  const profileGender = gender.value?.trim() || '';
-  const profileRole = role.value?.trim() || '';
+  // ✨ Eingabefelder explizit über DOM holen
+  const profileName = document.getElementById('name').value.trim();
+  const profileAge = document.getElementById('age').value.trim();
+  const profileLocation = document.getElementById('location').value.trim();
+  const profileGender = document.getElementById('gender').value.trim();
+  const profileRole = document.getElementById('role').value.trim();
   const availableFrom = document.getElementById('available-from').value;
   const availableTo = document.getElementById('available-to').value;
 
-  // Eingaben prüfen
+  // Prüfen, ob Pflichtfelder leer sind
   if (!profileName || !profileLocation) {
     return showMessage("Name und Ort dürfen nicht leer sein.");
   }
 
-  // Profilbild hochladen (optional)
+  // 🔽 Profilbild-Upload vorbereiten
   let imageUrl = null;
   const file = document.getElementById('profile-image').files[0];
   if (file) {
@@ -81,13 +81,17 @@ saveProfileBtn.addEventListener('click', async () => {
         contentType: file.type
       });
 
-    if (uploadError) return showMessage('Fehler beim Hochladen: ' + uploadError.message);
+    if (uploadError) {
+      return showMessage('Fehler beim Hochladen: ' + uploadError.message);
+    }
 
-    const { data: publicData } = supabaseClient.storage.from('profile-images').getPublicUrl(fileName);
+    const { data: publicData } = supabaseClient.storage
+      .from('profile-images')
+      .getPublicUrl(fileName);
     imageUrl = publicData.publicUrl;
   }
 
-  // Profil speichern
+  // 🔄 Profil speichern
   const { error } = await supabaseClient.from('profiles').upsert({
     user_id: user.id,
     name: profileName,
