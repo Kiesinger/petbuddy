@@ -54,6 +54,21 @@ saveProfileBtn.addEventListener('click', async () => {
   const user = (await supabaseClient.auth.getUser()).data.user;
   if (!user) return;
 
+  // Werte sammeln & trimmen
+  const profileName = name.value?.trim() || '';
+  const profileAge = age.value?.trim() || '';
+  const profileLocation = location.value?.trim() || '';
+  const profileGender = gender.value?.trim() || '';
+  const profileRole = role.value?.trim() || '';
+  const availableFrom = document.getElementById('available-from').value;
+  const availableTo = document.getElementById('available-to').value;
+
+  // Eingaben prüfen
+  if (!profileName || !profileLocation) {
+    return showMessage("Name und Ort dürfen nicht leer sein.");
+  }
+
+  // Profilbild hochladen (optional)
   let imageUrl = null;
   const file = document.getElementById('profile-image').files[0];
   if (file) {
@@ -72,20 +87,22 @@ saveProfileBtn.addEventListener('click', async () => {
     imageUrl = publicData.publicUrl;
   }
 
+  // Profil speichern
   const { error } = await supabaseClient.from('profiles').upsert({
     user_id: user.id,
-    name: name.value,
-    age: age.value,
-    location: location.value,
-    gender: gender.value,
-    role: role.value,
-    available_from: document.getElementById('available-from').value,
-    available_to: document.getElementById('available-to').value,
+    name: profileName,
+    age: profileAge,
+    location: profileLocation,
+    gender: profileGender,
+    role: profileRole,
+    available_from: availableFrom,
+    available_to: availableTo,
     image_url: imageUrl
   });
 
-  if (error) showMessage(error.message);
-  else {
+  if (error) {
+    showMessage(error.message);
+  } else {
     showMessage("Profil gespeichert!");
     await loadProfile();
     loadUsers();
@@ -94,6 +111,7 @@ saveProfileBtn.addEventListener('click', async () => {
     populateFilterOptions();
   }
 });
+
 // --- Seitenwechsel ---
 pageSelect.addEventListener('change', () => {
   document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
