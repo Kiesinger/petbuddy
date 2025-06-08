@@ -11,6 +11,7 @@ const pageSelect = document.getElementById('page-select');
 const petForm = document.getElementById('pet-form');
 const petList = document.getElementById('pet-list');
 const filterBtn = document.getElementById('apply-filter');
+const providerFilterBtn = document.getElementById('apply-provider-filter');
 const chatSendBtn = document.getElementById('send-chat-btn');
 
 let currentUserId = null;
@@ -57,9 +58,15 @@ saveProfileBtn.addEventListener('click', async () => {
     const fileName = `${user.id}.${fileExt}`;
     const { error: uploadError } = await supabaseClient.storage
       .from('profile-images')
-      .upload(fileName, file, { upsert: true, contentType: file.type });
+      .upload(fileName, file, {
+        upsert: true,
+        contentType: file.type
+      });
 
-    if (uploadError) return showMessage('Fehler beim Hochladen: ' + uploadError.message);
+    if (uploadError) {
+      showMessage('Fehler beim Hochladen: ' + uploadError.message);
+      return;
+    }
 
     const { data: publicData } = supabaseClient
       .storage
@@ -143,8 +150,8 @@ async function loadUser() {
 
   document.getElementById('auth-section').classList.add('hidden');
   document.getElementById('logout-btn').classList.remove('hidden');
-  document.getElementById('page-select-wrapper').classList.remove('hidden');
-  document.getElementById('profile-page').classList.remove('hidden');
+  document.getElementById('page-select').classList.remove('hidden');
+  document.getElementById('app-header').classList.remove('hidden');
 
   await loadProfile();
   loadMyPets();
@@ -182,16 +189,8 @@ async function loadMyPets() {
     const li = document.createElement('li');
     li.innerHTML = `<strong>${pet.name}</strong> (${pet.pet_type}) – ${pet.role}<br/>
       ${pet.description}<br/>
-      ${pet.image_url ? `<img src="${pet.image_url}" />` : ''}
-      <button class="delete-btn" data-id="${pet.id}">🗑️</button>`;
+      ${pet.image_url ? `<img src="${pet.image_url}" />` : ''}`;
     petList.appendChild(li);
-  });
-
-  document.querySelectorAll('.delete-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      await supabaseClient.from('pets').delete().eq('id', btn.dataset.id);
-      loadMyPets();
-    });
   });
 }
 
@@ -201,32 +200,68 @@ async function loadUsers() {
   list.innerHTML = '';
   data.forEach(user => {
     const li = document.createElement('li');
-    li.innerHTML = `<strong>${user.name}</strong> sucht für ${user.pet_type}<br/>
-      ${user.description}<br/>
-      ${user.image_url ? `<img src="${user.image_url}" />` : ''}`;
+    li.innerHTML = `<strong>${user.name}</strong> sucht für ${user.pet_type}<br/>${user.description}<br/>${user.image_url ? `<img src="${user.image_url}" />` : ''}`;
     list.appendChild(li);
   });
 }
 
 async function loadSitters() {
-  document.getElementById('apply-provider-filter').click(); // direkt filtern beim Laden
-}
-
-async function loadBuddies() {
-  const { data } = await supabaseClient.from('profiles').select('*').neq('user_id', currentUserId);
-  const list = document.getElementById('buddies-list');
+  const { data } = await supabaseClient.from('pets').select('*').eq('role', 'sitter');
+  const profiles = await supabaseClient.from('profiles').select('*');
+  const list = document.getElementById('sitters-list');
   list.innerHTML = '';
   data.forEach(user => {
+    const prof = profiles.data.find(p => p.user_id === user.owner_id);
+    const availability = prof ? ` (verfügbar: ${prof.available_from || '-'} bis ${prof.available_to || '-'})` : '';
     const li = document.createElement('li');
-    li.textContent = `${user.name || 'Unbekannt'} (${user.role || '-'}) aus ${user.location || '-'}`;
+    li.innerHTML = `<strong>${user.name}</strong> bietet Betreuung für ${user.pet_type}${availability}<br/>${user.description}<br/>${user.image_url ? `<img src="${user.image_url}" />` : ''}`;
     list.appendChild(li);
+  });
+}
+
+providerFilterBtn.addEventListener('click', async () => {
+  const loc = document.getElementById('provider-filter-location').value;
+  const type = document.getElementById('provider-filter-pet-type').value;
+
+  const { data: pets } = await supabaseClient.from('pets').select('*').eq('role', 'sitter');
+  const profiles = await supabaseClient.from('profiles').select('*');
+  const list = document.getElementById('sitters-list');
+  list.innerHTML = '';
+
+  const filtered = pets.filter(p => {
+    const prof = profiles.data.find(x => x.user_id === p.owner_id);
+    const matchesLocation = !loc || prof?.location === loc;
+    const matchesType = !type || p.pet_type === type;
+    return matchesLocation && matchesType;
+  });
+
+  filtered.forEach(user => {
+    const prof = profiles.data.find(p => p.user_id === user.owner_id);
+    const availability = prof ? ` (verfügbar: ${prof.available_from || '-'} bis ${prof.available_to || '-'})` : '';
+    const li = document.createElement('li');
+    li.innerHTML = `<strong>${user.name}</strong> bietet Betreuung für ${user.pet_type}${availability}<br/>${user.description}<br/>${user.image_url ? `<img src="${user.image_url}" />` : ''}`;
+    list.appendChild(li);
+  });
+});
+
+async function loadBuddies() {
+  const { data } = await supabaseClient.from('profiles').select('*');
+  const list = document.getElementById('buddies-list');
+  list.innerHTML = '';
+  data.forEach(b => {
+    if (b.user_id !== currentUserId) {
+      const li = document.createElement('li');
+      li.textContent = `${b.name} – ${b.role || ''} (${b.location || ''})`;
+      list.appendChild(li);
+    }
   });
 }
 
 async function populateFilterOptions() {
   const { data: profiles } = await supabaseClient.from('profiles').select('location');
   const locations = [...new Set(profiles.map(p => p.location).filter(Boolean))];
-  ['filter-location', 'provider-filter-location'].forEach(id => {
+  const locationSelects = ['filter-location', 'provider-filter-location'];
+  locationSelects.forEach(id => {
     const sel = document.getElementById(id);
     sel.innerHTML = '<option value="">Alle Orte</option>';
     locations.forEach(loc => {
@@ -239,7 +274,8 @@ async function populateFilterOptions() {
 
   const { data: pets } = await supabaseClient.from('pets').select('pet_type');
   const types = [...new Set(pets.map(p => p.pet_type).filter(Boolean))];
-  ['filter-pet-type', 'provider-filter-pet-type'].forEach(id => {
+  const typeSelects = ['filter-pet-type', 'provider-filter-pet-type'];
+  typeSelects.forEach(id => {
     const sel = document.getElementById(id);
     sel.innerHTML = '<option value="">Alle Tierarten</option>';
     types.forEach(type => {
@@ -251,27 +287,26 @@ async function populateFilterOptions() {
   });
 }
 
-document.getElementById('apply-provider-filter').addEventListener('click', async () => {
-  const location = document.getElementById('provider-filter-location').value;
-  const petType = document.getElementById('provider-filter-pet-type').value;
-  const { data: pets } = await supabaseClient.from('pets').select('*').eq('role', 'sitter');
-  const { data: profiles } = await supabaseClient.from('profiles').select('*');
+filterBtn.addEventListener('click', async () => {
+  const location = document.getElementById('filter-location').value;
+  const petType = document.getElementById('filter-pet-type').value;
 
-  const list = document.getElementById('sitters-list');
+  const { data: profiles } = await supabaseClient.from('profiles').select('*');
+  const { data: pets } = await supabaseClient.from('pets').select('*');
+
+  const list = document.getElementById('filtered-list');
   list.innerHTML = '';
 
-  pets.forEach(pet => {
-    const profile = profiles.find(p => p.user_id === pet.owner_id);
-    const matchLoc = !location || profile?.location === location;
-    const matchType = !petType || pet.pet_type === petType;
-    if (matchLoc && matchType) {
-      const li = document.createElement('li');
-      li.innerHTML = `<strong>${pet.name}</strong> bietet Betreuung für ${pet.pet_type}<br/>
-        ${pet.description}<br/>
-        Verfügbar: ${profile?.available_from || '-'} bis ${profile?.available_to || '-'}<br/>
-        ${pet.image_url ? `<img src="${pet.image_url}" />` : ''}`;
-      list.appendChild(li);
-    }
+  const filtered = profiles.filter(entry => {
+    const matchesLocation = !location || entry.location === location;
+    const hasMatchingPet = !petType || pets.some(pet => pet.owner_id === entry.user_id && pet.pet_type === petType);
+    return matchesLocation && hasMatchingPet;
+  });
+
+  filtered.forEach(entry => {
+    const li = document.createElement('li');
+    li.textContent = `${entry.name} – ${entry.role} aus ${entry.location}`;
+    list.appendChild(li);
   });
 });
 
@@ -318,7 +353,8 @@ async function loadMessages(otherUserId) {
   if (!data) return;
   data.forEach(msg => {
     const div = document.createElement('div');
-    div.textContent = `${msg.sender_id === currentUserId ? 'Du' : otherUserName}: ${msg.content}`;
+    const sender = msg.sender_id === currentUserId ? 'Du' : otherUserName;
+    div.textContent = `${sender}: ${msg.content}`;
     box.appendChild(div);
   });
 }
