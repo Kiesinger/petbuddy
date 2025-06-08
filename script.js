@@ -264,6 +264,26 @@ document.getElementById('apply-provider-filter').addEventListener('click', async
   });
 });
 
+// --- Suchende Nutzer laden ---
+async function loadUsers() {
+  const { data: pets } = await supabaseClient.from('pets').select('*').eq('role', 'owner');
+  const { data: profiles } = await supabaseClient.from('profiles').select('*');
+
+  const list = document.getElementById('users-list');
+  list.innerHTML = '';
+
+  pets.forEach(pet => {
+    const profile = profiles.find(p => p.user_id === pet.owner_id);
+    const li = document.createElement('li');
+    li.innerHTML = `<strong>${pet.name}</strong> sucht Betreuung für ${pet.pet_type}<br/>
+      ${pet.description}<br/>
+      Ort: ${profile?.location || '-'}<br/>
+      Verfügbar: ${profile?.available_from || '-'} bis ${profile?.available_to || '-'}<br/>
+      ${pet.image_url ? `<img src="${pet.image_url}" />` : ''}`;
+    list.appendChild(li);
+  });
+}
+
 // --- Chat ---
 async function loadChatUsers() {
   const { data } = await supabaseClient.from('profiles').select('user_id, name');
