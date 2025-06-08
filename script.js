@@ -183,21 +183,36 @@ async function loadUser() {
 async function loadProfile() {
   const user = (await supabaseClient.auth.getUser()).data.user;
   if (!user) return;
-  const { data } = await supabaseClient.from('profiles').select('*').eq('user_id', user.id).maybeSingle();
+
+  const { data, error } = await supabaseClient
+    .from('profiles')
+    .select('*')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (error) {
+    showMessage("Fehler beim Laden des Profils: " + error.message);
+    return;
+  }
+
   if (data) {
-    name.value = data.name || '';
-    age.value = data.age || '';
-    location.value = data.location || '';
-    gender.value = data.gender || '';
-    role.value = data.role || '';
-    document.getElementById('available-from').value = data.available_from || '';
-    document.getElementById('available-to').value = data.available_to || '';
-    currentUserName = data.name || '';
+    name.value = data.name ?? '';
+    age.value = data.age ?? '';
+    location.value = data.location ?? '';
+    gender.value = data.gender ?? '';
+    role.value = data.role ?? '';
+    document.getElementById('available-from').value = data.available_from ?? '';
+    document.getElementById('available-to').value = data.available_to ?? '';
+    currentUserName = data.name ?? '';
+
     if (data.image_url) {
       document.getElementById('profile-preview').src = data.image_url;
+    } else {
+      document.getElementById('profile-preview').src = '';
     }
   }
 }
+
 
 // --- Meine Tiere laden ---
 async function loadMyPets() {
