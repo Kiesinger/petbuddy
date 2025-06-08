@@ -15,6 +15,7 @@ const filterBtn = document.getElementById('apply-filter');
 const chatSendBtn = document.getElementById('send-chat-btn');
 
 let currentUserId = null;
+let currentUserName = '';
 
 function showMessage(msg) {
   const box = document.getElementById('message-box');
@@ -47,6 +48,7 @@ saveProfileBtn.addEventListener('click', async () => {
 
   const { error } = await supabaseClient.from('profiles').upsert({
     user_id: user.id,
+    name: document.getElementById('name').value,
     age: age.value,
     location: location.value,
     gender: gender.value,
@@ -131,12 +133,14 @@ async function loadProfile() {
   if (!user) return;
   const { data, error } = await supabaseClient.from('profiles').select('*').eq('user_id', user.id).maybeSingle();
   if (data) {
+    document.getElementById('name').value = data.name || '';
     age.value = data.age || '';
     location.value = data.location || '';
     gender.value = data.gender || '';
     role.value = data.role || '';
     document.getElementById('available-from').value = data.available_from || '';
     document.getElementById('available-to').value = data.available_to || '';
+    currentUserName = data.name || '';
   }
 }
 
@@ -198,20 +202,20 @@ filterBtn.addEventListener('click', async () => {
     const match = petType ? entry.pet_type === petType : true;
     if (match) {
       const li = document.createElement('li');
-      li.textContent = `${entry.role} aus ${entry.location}`;
+      li.textContent = `${entry.name} – ${entry.role} aus ${entry.location}`;
       list.appendChild(li);
     }
   });
 });
 
 async function loadChatUsers() {
-  const { data } = await supabaseClient.from('profiles').select('user_id');
+  const { data } = await supabaseClient.from('profiles').select('user_id, name');
   const select = document.getElementById('chat-user-select');
   select.innerHTML = '';
   data.forEach(user => {
     const opt = document.createElement('option');
     opt.value = user.user_id;
-    opt.textContent = user.user_id;
+    opt.textContent = user.name || user.user_id;
     select.appendChild(opt);
   });
 }
@@ -241,6 +245,7 @@ async function loadMessages(otherUserId) {
 
   const box = document.getElementById('chat-messages');
   box.innerHTML = '';
+  if (!data) return;
   data.forEach(msg => {
     const div = document.createElement('div');
     div.textContent = `${msg.sender_id === currentUserId ? 'Du' : 'Partner'}: ${msg.content}`;
