@@ -181,8 +181,15 @@ async function loadUser() {
 }
 // --- Profil laden ---
 async function loadProfile() {
-  const user = (await supabaseClient.auth.getUser()).data.user;
-  if (!user) return;
+  const userResponse = await supabaseClient.auth.getUser();
+  const user = userResponse?.data?.user;
+
+  console.log("Benutzer geladen:", user);
+
+  if (!user) {
+    console.warn("Kein Benutzer gefunden!");
+    return;
+  }
 
   const { data, error } = await supabaseClient
     .from('profiles')
@@ -190,26 +197,31 @@ async function loadProfile() {
     .eq('user_id', user.id)
     .maybeSingle();
 
+  console.log("Daten aus Supabase:", data);
   if (error) {
-    showMessage("Fehler beim Laden des Profils: " + error.message);
+    console.error("Fehler beim Laden des Profils:", error.message);
     return;
   }
 
   if (data) {
-    name.value = data.name ?? '';
-    age.value = data.age ?? '';
-    location.value = data.location ?? '';
-    gender.value = data.gender ?? '';
-    role.value = data.role ?? '';
+    document.getElementById('name').value = data.name ?? '';
+    document.getElementById('age').value = data.age ?? '';
+    document.getElementById('location').value = data.location ?? '';
+    document.getElementById('gender').value = data.gender ?? '';
+    document.getElementById('role').value = data.role ?? '';
     document.getElementById('available-from').value = data.available_from ?? '';
     document.getElementById('available-to').value = data.available_to ?? '';
+
     currentUserName = data.name ?? '';
 
+    const profilePreview = document.getElementById('profile-preview');
     if (data.image_url) {
-      document.getElementById('profile-preview').src = data.image_url;
+      profilePreview.src = data.image_url;
     } else {
-      document.getElementById('profile-preview').src = '';
+      profilePreview.src = '';
     }
+  } else {
+    console.warn("Kein Profil-Eintrag gefunden.");
   }
 }
 
