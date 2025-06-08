@@ -48,9 +48,16 @@
         <option value="sitter">Sitter (Anbieter)</option>
         <option value="owner">Tierbesitzer (Nutzer)</option>
       </select>
+
       <h3>Verfügbarkeit</h3>
       <input type="date" id="available-from" placeholder="Verfügbar ab" />
       <input type="date" id="available-to" placeholder="Verfügbar bis" />
+
+      <h3>Profilbild</h3>
+      <input type="file" id="profile-image" accept="image/*" />
+      <br/>
+      <img id="profile-preview" src="" alt="Profilbild" style="max-width: 150px; display: block; margin: 10px 0;" />
+
       <button id="save-profile">Profil speichern</button>
 
       <h3>Meine Tiere</h3>
@@ -99,7 +106,7 @@
     <div id="chat-section" class="page hidden">
       <h2>💬 Nachrichten</h2>
       <select id="chat-user-select"></select>
-      <div id="chat-messages"></div>
+      <div id="chat-messages" style="min-height: 150px; border: 1px solid #ccc; padding: 10px; margin: 10px 0;"></div>
       <textarea id="chat-input" placeholder="Nachricht..." rows="2"></textarea>
       <button id="send-chat-btn">Senden</button>
     </div>
