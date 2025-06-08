@@ -149,7 +149,7 @@ async function loadUser() {
   document.getElementById('auth-section').classList.add('hidden');
   document.getElementById('logout-btn').classList.remove('hidden');
   document.getElementById('page-select').classList.remove('hidden');
-  document.getElementById('page-select-wrapper').classList.remove('hidden'); // Wichtig!
+  document.getElementById('page-select-wrapper').classList.remove('hidden');
   document.getElementById('profile-page').classList.remove('hidden');
 
   await loadProfile();
@@ -188,7 +188,7 @@ async function loadMyPets() {
     li.innerHTML = `<strong>${pet.name}</strong> (${pet.pet_type}) – ${pet.role}<br/>
       ${pet.description}<br/>
       ${pet.image_url ? `<img src="${pet.image_url}" />` : ''}
-      <button class="delete-btn" data-id="${pet.id}">🗑️</button>`;
+      <button class="delete-btn" data-id="${pet.id}">🔚️</button>`;
     petList.appendChild(li);
   });
 
@@ -300,6 +300,9 @@ document.getElementById('chat-user-select').addEventListener('change', (e) => {
 });
 
 async function loadMessages(otherUserId) {
+  const { data: userData } = await supabaseClient.from('profiles').select('name').eq('user_id', otherUserId).maybeSingle();
+  const otherUserName = userData?.name || 'Partner';
+
   const { data } = await supabaseClient.from('messages').select('*').or(
     `and(sender_id.eq.${currentUserId},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${currentUserId})`
   ).order('sent_at', { ascending: true });
@@ -309,7 +312,8 @@ async function loadMessages(otherUserId) {
   if (!data) return;
   data.forEach(msg => {
     const div = document.createElement('div');
-    div.textContent = `${msg.sender_id === currentUserId ? 'Du' : 'Partner'}: ${msg.content}`;
+    const sender = msg.sender_id === currentUserId ? 'Du' : otherUserName;
+    div.textContent = `${sender}: ${msg.content}`;
     box.appendChild(div);
   });
 }
