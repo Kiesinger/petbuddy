@@ -9,15 +9,19 @@
 </head>
 <body>
 
-  <!-- Header mit Titel, Logout und Navigation -->
-  <header style="position: relative;">
-    <h1 style="text-align: center;">🐾 Petbuddy</h1>
-    <button id="logout-btn" class="hidden" style="position: absolute; top: 10px; right: 10px;">Logout</button>
-    <div id="page-select-wrapper" class="hidden" style="text-align: center; margin-top: 10px;">
+  <!-- Header mit Logo, Titel, Logout und Navigation -->
+  <header style="text-align: center; margin-bottom: 1rem;">
+    <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+      <img src="logo.png" alt="Logo" style="height: 40px;" />
+      <h1>🐾 Petbuddy</h1>
+    </div>
+    <button id="logout-btn" class="hidden" style="margin-top: 10px;">Logout</button>
+    <div id="page-select-wrapper" class="hidden" style="margin-top: 10px;">
       <select id="page-select">
         <option value="profile-page">Profil</option>
         <option value="pets-page">Meine Tiere</option>
-        <option value="search-page">Suchen</option>
+        <option value="search-page">Suche</option>
+        <option value="providers-page">Anbieter</option>
         <option value="chat-page">Chat</option>
       </select>
     </div>
@@ -34,8 +38,7 @@
   <!-- Nachricht -->
   <div id="message-box" class="hidden"></div>
 
-  <!-- Seiteninhalte -->
-
+  <!-- Profilseite -->
   <section id="profile-page" class="page hidden">
     <h2>Profil</h2>
     <input type="text" id="name" placeholder="Dein Name" />
@@ -50,6 +53,7 @@
     <button id="save-profile">Speichern</button>
   </section>
 
+  <!-- Meine Tiere -->
   <section id="pets-page" class="page hidden">
     <h2>Meine Tiere</h2>
     <form id="pet-form">
@@ -66,6 +70,7 @@
     <ul id="pet-list"></ul>
   </section>
 
+  <!-- Suche nach Betreuung -->
   <section id="search-page" class="page hidden">
     <h2>Suche nach Betreuung</h2>
 
@@ -82,13 +87,17 @@
     <button id="apply-filter">Filtern</button>
     <ul id="filtered-list"></ul>
 
-    <h3>Tierbesitzer</h3>
+    <h3>Suchende (Tierbesitzer)</h3>
     <ul id="users-list"></ul>
+  </section>
 
-    <h3>Tierbetreuer</h3>
+  <!-- Anbieter separat anzeigen -->
+  <section id="providers-page" class="page hidden">
+    <h2>Anbieter</h2>
     <ul id="sitters-list"></ul>
   </section>
 
+  <!-- Chatbereich -->
   <section id="chat-page" class="page hidden">
     <h2>Nachrichten</h2>
     <label>Empfänger:
