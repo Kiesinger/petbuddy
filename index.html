@@ -16,6 +16,8 @@
       <option value="profile-page">👤 Mein Profil</option>
       <option value="users-page">🔎 Suchende</option>
       <option value="sitters-page">🐾 Anbieter</option>
+      <option value="filter-section">🔍 Filter</option>
+      <option value="chat-section">💬 Nachrichten</option>
     </select>
 
     <!-- Nachrichtenbox -->
@@ -45,6 +47,12 @@
         <option value="sitter">Sitter (Anbieter)</option>
         <option value="owner">Tierbesitzer (Nutzer)</option>
       </select>
+
+      <!-- Neue Verfügbarkeitseingabe -->
+      <h3>Verfügbarkeit</h3>
+      <input type="date" id="available-from" placeholder="Verfügbar ab" />
+      <input type="date" id="available-to" placeholder="Verfügbar bis" />
+
       <button id="save-profile">Profil speichern</button>
 
       <h3>Meine Tiere</h3>
@@ -73,6 +81,29 @@
     <div id="sitters-page" class="page hidden">
       <h2>Anbieter (Sitter)</h2>
       <ul id="sitters-list"></ul>
+    </div>
+
+    <!-- Filterfunktion -->
+    <div id="filter-section" class="page hidden">
+      <h2>🔍 Filter</h2>
+      <input type="text" id="filter-location" placeholder="Ort" />
+      <select id="filter-pet-type">
+        <option value="">Tierart wählen</option>
+        <option value="Hund">Hund</option>
+        <option value="Katze">Katze</option>
+        <option value="Vogel">Vogel</option>
+      </select>
+      <button id="apply-filter">Filter anwenden</button>
+      <ul id="filtered-list"></ul>
+    </div>
+
+    <!-- Chatbereich -->
+    <div id="chat-section" class="page hidden">
+      <h2>💬 Nachrichten</h2>
+      <select id="chat-user-select"></select>
+      <div id="chat-messages" style="max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 1rem; margin-bottom: 1rem;"></div>
+      <textarea id="chat-input" placeholder="Nachricht..." rows="2"></textarea>
+      <button id="send-chat-btn">Senden</button>
     </div>
   </div>
 
