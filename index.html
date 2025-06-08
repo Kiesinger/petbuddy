@@ -9,36 +9,36 @@
 </head>
 <body>
 
-  <!-- Login View -->
-  <section id="auth-section">
-    <div style="text-align: center; margin-top: 50px;">
-      <img src="logo.png" alt="Logo" style="height: 120px;" />
-      <h1 style="font-size: 2em;">🐾 Petbuddy</h1>
-    </div>
-    <div style="text-align: center; margin-top: 20px;">
-      <input type="email" id="email" placeholder="Email" />
-      <input type="password" id="password" placeholder="Passwort" />
-      <button id="login-btn">Login</button>
-      <button id="signup-btn">Registrieren</button>
-    </div>
-  </section>
-
-  <!-- App Header -->
-  <header id="app-header" class="hidden" style="display: flex; justify-content: space-between; align-items: center; padding: 10px;">
-    <div style="display: flex; align-items: center;">
-      <img src="logo.png" alt="Logo" style="height: 50px; margin-right: 10px;" />
+  <header style="margin-bottom: 1rem; position: relative;">
+    <div style="display: flex; justify-content: flex-start; align-items: center; gap: 10px;">
+      <img src="logo.png" alt="Logo" style="height: 60px;" />
       <h1 style="margin: 0;">🐾 Petbuddy</h1>
     </div>
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <select id="page-select" class="hidden"></select>
-      <button id="logout-btn" class="hidden" style="padding: 5px 10px;">Logout</button>
+    <button id="logout-btn" class="hidden">Logout</button>
+    <div id="page-select-wrapper" class="hidden" style="margin-top: 10px;">
+      <select id="page-select">
+        <option value="profile-page">Profil</option>
+        <option value="pets-page">Meine Tiere</option>
+        <option value="search-page">Suche</option>
+        <option value="providers-page">Anbieter</option>
+        <option value="buddies-page">Petbuddies</option>
+        <option value="chat-page">Chat</option>
+      </select>
     </div>
   </header>
 
-  <!-- Nachricht -->
+  <section id="auth-section">
+    <div style="text-align: center; margin-bottom: 1rem;">
+      <img src="logo.png" alt="Logo" style="height: 100px;" />
+    </div>
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Passwort" />
+    <button id="login-btn">Login</button>
+    <button id="signup-btn">Registrieren</button>
+  </section>
+
   <div id="message-box" class="hidden"></div>
 
-  <!-- Seiten -->
   <section id="profile-page" class="page hidden">
     <h2>Profil</h2>
     <input type="text" id="name" placeholder="Dein Name" />
