@@ -155,15 +155,16 @@ ul li img {
   margin-top: 10px;
 }
 
-/* Logout Button oben rechts */
+/* Logout Button unten und kleiner */
 #logout-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
+  position: static;
+  display: block;
+  margin: 2rem auto 0 auto;
+  width: fit-content;
   background-color: #ddd;
   color: #333;
   padding: 0.4rem 0.75rem;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   border-radius: 8px;
   border: none;
   cursor: pointer;
@@ -178,4 +179,11 @@ ul li img {
   max-width: 150px;
   border-radius: 12px;
   margin-top: 10px;
+}
+
+/* Auffälligeres Logo */
+#main-logo {
+  height: 80px;
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
