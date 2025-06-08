@@ -1,10 +1,8 @@
-// --- Supabase Setup ---
 const supabaseClient = supabase.createClient(
   'https://hdturwmfbkbcwdyyfzao.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkdHVyd21mYmtiY3dkeXlmemFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNTE5NjMsImV4cCI6MjA2MjgyNzk2M30.4skXOC9ojcKNiYo5q0ZkChYyx28z_mkI5CxNz31bofI'
 );
 
-// --- DOM Elements ---
 const loginBtn = document.getElementById('login-btn');
 const signupBtn = document.getElementById('signup-btn');
 const saveProfileBtn = document.getElementById('save-profile');
@@ -18,7 +16,6 @@ const chatSendBtn = document.getElementById('send-chat-btn');
 let currentUserId = null;
 let currentUserName = '';
 
-// --- Message ---
 function showMessage(msg) {
   const box = document.getElementById('message-box');
   box.textContent = msg;
@@ -26,7 +23,6 @@ function showMessage(msg) {
   setTimeout(() => box.classList.add('hidden'), 4000);
 }
 
-// --- Auth ---
 loginBtn.addEventListener('click', async () => {
   const { error } = await supabaseClient.auth.signInWithPassword({
     email: email.value,
@@ -50,7 +46,6 @@ logoutBtn.addEventListener('click', async () => {
   location.reload();
 });
 
-// --- Profile speichern ---
 saveProfileBtn.addEventListener('click', async () => {
   const user = (await supabaseClient.auth.getUser()).data.user;
   if (!user) return;
@@ -62,14 +57,14 @@ saveProfileBtn.addEventListener('click', async () => {
     const fileName = `${user.id}.${fileExt}`;
     const { error: uploadError } = await supabaseClient.storage
       .from('profile-images')
-      .upload(fileName, file, {
-        upsert: true,
-        contentType: file.type
-      });
+      .upload(fileName, file, { upsert: true, contentType: file.type });
 
     if (uploadError) return showMessage('Fehler beim Hochladen: ' + uploadError.message);
 
-    const { data: publicData } = supabaseClient.storage.from('profile-images').getPublicUrl(fileName);
+    const { data: publicData } = supabaseClient
+      .storage
+      .from('profile-images')
+      .getPublicUrl(fileName);
     imageUrl = publicData.publicUrl;
   }
 
@@ -96,13 +91,11 @@ saveProfileBtn.addEventListener('click', async () => {
   }
 });
 
-// --- Seitenwechsel ---
 pageSelect.addEventListener('change', () => {
   document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
   document.getElementById(pageSelect.value).classList.remove('hidden');
 });
 
-// --- Tier speichern ---
 petForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const name = document.getElementById('pet-name').value;
@@ -143,7 +136,6 @@ petForm.addEventListener('submit', async (e) => {
   }
 });
 
-// --- Hauptdaten laden ---
 async function loadUser() {
   const user = (await supabaseClient.auth.getUser()).data.user;
   if (!user) return;
@@ -164,7 +156,6 @@ async function loadUser() {
   pollNewMessages();
 }
 
-// --- Profil laden ---
 async function loadProfile() {
   const user = (await supabaseClient.auth.getUser()).data.user;
   if (!user) return;
@@ -184,7 +175,6 @@ async function loadProfile() {
   }
 }
 
-// --- Meine Tiere laden ---
 async function loadMyPets() {
   const { data } = await supabaseClient.from('pets').select('*').eq('owner_id', currentUserId);
   petList.innerHTML = '';
@@ -205,13 +195,38 @@ async function loadMyPets() {
   });
 }
 
-// --- Filteroptionen befüllen ---
+async function loadUsers() {
+  const { data } = await supabaseClient.from('pets').select('*').eq('role', 'owner');
+  const list = document.getElementById('users-list');
+  list.innerHTML = '';
+  data.forEach(user => {
+    const li = document.createElement('li');
+    li.innerHTML = `<strong>${user.name}</strong> sucht für ${user.pet_type}<br/>
+      ${user.description}<br/>
+      ${user.image_url ? `<img src="${user.image_url}" />` : ''}`;
+    list.appendChild(li);
+  });
+}
+
+async function loadSitters() {
+  document.getElementById('apply-provider-filter').click(); // direkt filtern beim Laden
+}
+
+async function loadBuddies() {
+  const { data } = await supabaseClient.from('profiles').select('*').neq('user_id', currentUserId);
+  const list = document.getElementById('buddies-list');
+  list.innerHTML = '';
+  data.forEach(user => {
+    const li = document.createElement('li');
+    li.textContent = `${user.name || 'Unbekannt'} (${user.role || '-'}) aus ${user.location || '-'}`;
+    list.appendChild(li);
+  });
+}
+
 async function populateFilterOptions() {
   const { data: profiles } = await supabaseClient.from('profiles').select('location');
   const locations = [...new Set(profiles.map(p => p.location).filter(Boolean))];
-
-  const selects = ['filter-location', 'provider-filter-location'];
-  selects.forEach(id => {
+  ['filter-location', 'provider-filter-location'].forEach(id => {
     const sel = document.getElementById(id);
     sel.innerHTML = '<option value="">Alle Orte</option>';
     locations.forEach(loc => {
@@ -224,9 +239,7 @@ async function populateFilterOptions() {
 
   const { data: pets } = await supabaseClient.from('pets').select('pet_type');
   const types = [...new Set(pets.map(p => p.pet_type).filter(Boolean))];
-
-  const typeSelects = ['filter-pet-type', 'provider-filter-pet-type'];
-  typeSelects.forEach(id => {
+  ['filter-pet-type', 'provider-filter-pet-type'].forEach(id => {
     const sel = document.getElementById(id);
     sel.innerHTML = '<option value="">Alle Tierarten</option>';
     types.forEach(type => {
@@ -238,33 +251,30 @@ async function populateFilterOptions() {
   });
 }
 
-// --- Anbieter filtern ---
 document.getElementById('apply-provider-filter').addEventListener('click', async () => {
   const location = document.getElementById('provider-filter-location').value;
   const petType = document.getElementById('provider-filter-pet-type').value;
-
-  const { data: sitters } = await supabaseClient.from('pets').select('*').eq('role', 'sitter');
+  const { data: pets } = await supabaseClient.from('pets').select('*').eq('role', 'sitter');
   const { data: profiles } = await supabaseClient.from('profiles').select('*');
 
   const list = document.getElementById('sitters-list');
   list.innerHTML = '';
 
-  sitters.forEach(sitter => {
-    const profile = profiles.find(p => p.user_id === sitter.owner_id);
-    const matchesLocation = !location || profile?.location === location;
-    const matchesType = !petType || sitter.pet_type === petType;
-    if (matchesLocation && matchesType) {
+  pets.forEach(pet => {
+    const profile = profiles.find(p => p.user_id === pet.owner_id);
+    const matchLoc = !location || profile?.location === location;
+    const matchType = !petType || pet.pet_type === petType;
+    if (matchLoc && matchType) {
       const li = document.createElement('li');
-      li.innerHTML = `<strong>${sitter.name}</strong> bietet Betreuung für ${sitter.pet_type}<br/>
-        ${sitter.description}<br/>
+      li.innerHTML = `<strong>${pet.name}</strong> bietet Betreuung für ${pet.pet_type}<br/>
+        ${pet.description}<br/>
         Verfügbar: ${profile?.available_from || '-'} bis ${profile?.available_to || '-'}<br/>
-        ${sitter.image_url ? `<img src="${sitter.image_url}" />` : ''}`;
+        ${pet.image_url ? `<img src="${pet.image_url}" />` : ''}`;
       list.appendChild(li);
     }
   });
 });
 
-// --- Chat ---
 async function loadChatUsers() {
   const { data } = await supabaseClient.from('profiles').select('user_id, name');
   const select = document.getElementById('chat-user-select');
@@ -320,19 +330,6 @@ function pollNewMessages() {
   }, 5000);
 }
 
-// --- Petbuddies ---
-async function loadBuddies() {
-  const { data } = await supabaseClient.from('profiles').select('*').neq('user_id', currentUserId);
-  const list = document.getElementById('buddies-list');
-  list.innerHTML = '';
-  data.forEach(user => {
-    const li = document.createElement('li');
-    li.textContent = `${user.name || 'Unbekannt'} (${user.role || '-'}) aus ${user.location || '-'}`;
-    list.appendChild(li);
-  });
-}
-
-// --- Sessionprüfung ---
 window.addEventListener('DOMContentLoaded', async () => {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (session && session.user) {
