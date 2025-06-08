@@ -48,12 +48,16 @@ saveProfileBtn.addEventListener('click', async () => {
   const file = document.getElementById('profile-image').files[0];
   if (file) {
     const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}.${fileExt}`;
-    const filePath = `profile-images/${fileName}`;
-    const { error: uploadError } = await supabaseClient.storage.from('profile-images').upload(filePath, file, { upsert: true });
+    const fileName = `${user.id}.${fileExt}`; // ✅ korrigiert: kein doppelter Ordnername
+    const { error: uploadError } = await supabaseClient
+      .storage
+      .from('profile-images')
+      .upload(fileName, file, { upsert: true });
     if (!uploadError) {
-      const { data } = supabaseClient.storage.from('profile-images').getPublicUrl(filePath);
+      const { data } = supabaseClient.storage.from('profile-images').getPublicUrl(fileName);
       imageUrl = data.publicUrl;
+    } else {
+      showMessage("Fehler beim Bild-Upload: " + uploadError.message);
     }
   }
 
