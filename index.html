@@ -9,7 +9,6 @@
 </head>
 <body>
 
-  <!-- Header mit Logo, Titel, Logout und Navigation -->
   <header style="text-align: center; margin-bottom: 1rem;">
     <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
       <img src="logo.png" alt="Logo" style="height: 40px;" />
@@ -22,12 +21,12 @@
         <option value="pets-page">Meine Tiere</option>
         <option value="search-page">Suche</option>
         <option value="providers-page">Anbieter</option>
+        <option value="buddies-page">Petbuddies</option>
         <option value="chat-page">Chat</option>
       </select>
     </div>
   </header>
 
-  <!-- Login & Registrierung -->
   <section id="auth-section">
     <input type="email" id="email" placeholder="Email" />
     <input type="password" id="password" placeholder="Passwort" />
@@ -35,10 +34,8 @@
     <button id="signup-btn">Registrieren</button>
   </section>
 
-  <!-- Nachricht -->
   <div id="message-box" class="hidden"></div>
 
-  <!-- Profilseite -->
   <section id="profile-page" class="page hidden">
     <h2>Profil</h2>
     <input type="text" id="name" placeholder="Dein Name" />
@@ -53,7 +50,6 @@
     <button id="save-profile">Speichern</button>
   </section>
 
-  <!-- Meine Tiere -->
   <section id="pets-page" class="page hidden">
     <h2>Meine Tiere</h2>
     <form id="pet-form">
@@ -70,34 +66,33 @@
     <ul id="pet-list"></ul>
   </section>
 
-  <!-- Suche nach Betreuung -->
   <section id="search-page" class="page hidden">
     <h2>Suche nach Betreuung</h2>
-
     <label for="filter-location">Ort:</label>
-    <select id="filter-location">
-      <option value="">Alle Orte</option>
-    </select>
-
+    <select id="filter-location"><option value="">Alle Orte</option></select>
     <label for="filter-pet-type">Tierart:</label>
-    <select id="filter-pet-type">
-      <option value="">Alle Tierarten</option>
-    </select>
-
+    <select id="filter-pet-type"><option value="">Alle Tierarten</option></select>
     <button id="apply-filter">Filtern</button>
     <ul id="filtered-list"></ul>
-
     <h3>Suchende (Tierbesitzer)</h3>
     <ul id="users-list"></ul>
   </section>
 
-  <!-- Anbieter separat anzeigen -->
   <section id="providers-page" class="page hidden">
     <h2>Anbieter</h2>
+    <label for="provider-filter-location">Ort:</label>
+    <select id="provider-filter-location"><option value="">Alle Orte</option></select>
+    <label for="provider-filter-pet-type">Tierart:</label>
+    <select id="provider-filter-pet-type"><option value="">Alle Tierarten</option></select>
+    <button id="apply-provider-filter">Filtern</button>
     <ul id="sitters-list"></ul>
   </section>
 
-  <!-- Chatbereich -->
+  <section id="buddies-page" class="page hidden">
+    <h2>Andere Nutzer</h2>
+    <ul id="buddies-list"></ul>
+  </section>
+
   <section id="chat-page" class="page hidden">
     <h2>Nachrichten</h2>
     <label>Empfänger:
