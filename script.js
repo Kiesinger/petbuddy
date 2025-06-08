@@ -33,12 +33,28 @@ loginBtn.addEventListener('click', async () => {
 
 // Registrierung
 signupBtn.addEventListener('click', async () => {
-  const { error } = await supabaseClient.auth.signUp({
+  const { data, error } = await supabaseClient.auth.signUp({
     email: email.value,
     password: password.value,
   });
-  if (error) showMessage(error.message);
-  else showMessage("Registrierung erfolgreich! Bitte einloggen.");
+  if (error) {
+    showMessage(error.message);
+  } else {
+    const user = data.user;
+    if (user) {
+      // Profil automatisch anlegen
+      await supabaseClient.from('profiles').insert([
+        {
+          user_id: user.id,
+          age: null,
+          location: '',
+          gender: '',
+          role: '',
+        },
+      ]);
+    }
+    showMessage("Registrierung erfolgreich! Bitte einloggen.");
+  }
 });
 
 // Profil speichern
@@ -57,7 +73,7 @@ saveProfileBtn.addEventListener('click', async () => {
   if (error) showMessage(error.message);
   else {
     showMessage("Profil gespeichert!");
-    await loadProfile(); // aktualisierte Anzeige
+    await loadProfile();
     loadUsers();
     loadSitters();
   }
@@ -88,7 +104,7 @@ petForm.addEventListener('submit', async (e) => {
   }
   currentUserId = user.id;
 
-  // Bild hochladen (wenn vorhanden)
+  // Bild hochladen
   if (file) {
     const fileExt = file.name.split('.').pop();
     const fileName = `${crypto.randomUUID()}.${fileExt}`;
@@ -113,7 +129,6 @@ petForm.addEventListener('submit', async (e) => {
     imageUrl = data.publicUrl;
   }
 
-  // Eintrag speichern (RLS-konform!)
   const { error } = await supabaseClient.from('pets').insert({
     owner_id: currentUserId,
     name,
@@ -143,13 +158,13 @@ async function loadUser() {
   document.getElementById('page-select').classList.remove('hidden');
   document.getElementById('profile-page').classList.remove('hidden');
 
-  await loadProfile(); // Profil anzeigen
+  await loadProfile();
   loadMyPets();
   loadUsers();
   loadSitters();
 }
 
-// 🔄 Profil laden und anzeigen
+// Profil laden und anzeigen
 async function loadProfile() {
   const user = (await supabaseClient.auth.getUser()).data.user;
   if (!user) return;
@@ -158,14 +173,31 @@ async function loadProfile() {
     .from('profiles')
     .select('*')
     .eq('user_id', user.id)
-    .single();
+    .maybeSingle(); // ✅ Änderung hier
 
   if (error) {
-    console.warn("Profil nicht gefunden oder Fehler:", error);
+    console.warn("Fehler beim Laden des Profils:", error);
     return;
   }
 
-  // Felder befüllen
+  if (!data) {
+    const { error: insertError } = await supabaseClient.from('profiles').insert([
+      {
+        user_id: user.id,
+        age: null,
+        location: '',
+        gender: '',
+        role: '',
+      },
+    ]);
+    if (insertError) {
+      console.error("Fehler beim Anlegen des Profils:", insertError);
+      return;
+    }
+    showMessage("Neues Profil wurde automatisch angelegt.");
+    return;
+  }
+
   document.getElementById('age').value = data.age || '';
   document.getElementById('location').value = data.location || '';
   document.getElementById('gender').value = data.gender || '';
