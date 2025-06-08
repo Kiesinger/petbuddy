@@ -1,5 +1,3 @@
-// Neues script.js mit Chat, Verfügbarkeit und Filterfunktion
-
 const supabaseClient = supabase.createClient(
   'https://hdturwmfbkbcwdyyfzao.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkdHVyd21mYmtiY3dkeXlmemFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNTE5NjMsImV4cCI6MjA2MjgyNzk2M30.4skXOC9ojcKNiYo5q0ZkChYyx28z_mkI5CxNz31bofI'
@@ -46,15 +44,29 @@ saveProfileBtn.addEventListener('click', async () => {
   const user = (await supabaseClient.auth.getUser()).data.user;
   if (!user) return;
 
+  let imageUrl = null;
+  const file = document.getElementById('profile-image').files[0];
+  if (file) {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}.${fileExt}`;
+    const filePath = `profile-images/${fileName}`;
+    const { error: uploadError } = await supabaseClient.storage.from('profile-images').upload(filePath, file, { upsert: true });
+    if (!uploadError) {
+      const { data } = supabaseClient.storage.from('profile-images').getPublicUrl(filePath);
+      imageUrl = data.publicUrl;
+    }
+  }
+
   const { error } = await supabaseClient.from('profiles').upsert({
     user_id: user.id,
     name: document.getElementById('name').value,
-    age: age.value,
-    location: location.value,
-    gender: gender.value,
-    role: role.value,
-    available_from: document.getElementById('available-from').value,
-    available_to: document.getElementById('available-to').value,
+    age: document.getElementById('age').value,
+    location: document.getElementById('location').value,
+    gender: document.getElementById('gender').value,
+    role: document.getElementById('role').value,
+    available_from: document.getElementById('available-from')?.value,
+    available_to: document.getElementById('available-to')?.value,
+    image_url: imageUrl
   });
 
   if (error) showMessage(error.message);
@@ -89,9 +101,10 @@ petForm.addEventListener('submit', async (e) => {
     const fileName = `${crypto.randomUUID()}.${fileExt}`;
     const filePath = `${currentUserId}/${fileName}`;
     const { error: uploadError } = await supabaseClient.storage.from('pet-images').upload(filePath, file);
-    if (uploadError) return showMessage("Fehler beim Hochladen: " + uploadError.message);
-    const { data } = supabaseClient.storage.from('pet-images').getPublicUrl(filePath);
-    imageUrl = data.publicUrl;
+    if (!uploadError) {
+      const { data } = supabaseClient.storage.from('pet-images').getPublicUrl(filePath);
+      imageUrl = data.publicUrl;
+    }
   }
 
   const { error } = await supabaseClient.from('pets').insert({
@@ -131,17 +144,20 @@ async function loadUser() {
 async function loadProfile() {
   const user = (await supabaseClient.auth.getUser()).data.user;
   if (!user) return;
-  const { data, error } = await supabaseClient.from('profiles').select('*').eq('user_id', user.id).maybeSingle();
-  if (data) {
-    document.getElementById('name').value = data.name || '';
-    age.value = data.age || '';
-    location.value = data.location || '';
-    gender.value = data.gender || '';
-    role.value = data.role || '';
-    document.getElementById('available-from').value = data.available_from || '';
-    document.getElementById('available-to').value = data.available_to || '';
-    currentUserName = data.name || '';
+  const { data } = await supabaseClient.from('profiles').select('*').eq('user_id', user.id).maybeSingle();
+  if (!data) return;
+
+  document.getElementById('name').value = data.name || '';
+  document.getElementById('age').value = data.age || '';
+  document.getElementById('location').value = data.location || '';
+  document.getElementById('gender').value = data.gender || '';
+  document.getElementById('role').value = data.role || '';
+  document.getElementById('available-from').value = data.available_from || '';
+  document.getElementById('available-to').value = data.available_to || '';
+  if (data.image_url) {
+    document.getElementById('profile-preview').src = data.image_url;
   }
+  currentUserName = data.name || '';
 }
 
 async function loadMyPets() {
@@ -191,11 +207,9 @@ async function loadSitters() {
 filterBtn.addEventListener('click', async () => {
   const location = document.getElementById('filter-location').value;
   const petType = document.getElementById('filter-pet-type').value;
-
   let query = supabaseClient.from('profiles').select('*');
   if (location) query = query.ilike('location', `%${location}%`);
   const { data } = await query;
-
   const list = document.getElementById('filtered-list');
   list.innerHTML = '';
   data.forEach(entry => {
@@ -224,7 +238,6 @@ chatSendBtn.addEventListener('click', async () => {
   const to = document.getElementById('chat-user-select').value;
   const text = document.getElementById('chat-input').value;
   if (!text) return;
-
   await supabaseClient.from('messages').insert({
     sender_id: currentUserId,
     recipient_id: to,
@@ -239,9 +252,10 @@ document.getElementById('chat-user-select').addEventListener('change', (e) => {
 });
 
 async function loadMessages(otherUserId) {
-  const { data } = await supabaseClient.from('messages').select('*').or(
-    `and(sender_id.eq.${currentUserId},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${currentUserId})`
-  ).order('sent_at', { ascending: true });
+  const { data } = await supabaseClient.from('messages')
+    .select('*')
+    .or(`and(sender_id.eq.${currentUserId},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${currentUserId})`)
+    .order('sent_at', { ascending: true });
 
   const box = document.getElementById('chat-messages');
   box.innerHTML = '';
