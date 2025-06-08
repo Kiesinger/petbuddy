@@ -8,7 +8,20 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <h1>🐾 Tierbetreuung</h1>
+
+  <!-- Header mit Titel, Logout und Navigation -->
+  <header style="position: relative;">
+    <h1 style="text-align: center;">🐾 Tierbetreuung</h1>
+    <button id="logout-btn" class="hidden" style="position: absolute; top: 10px; right: 10px;">Logout</button>
+    <div id="page-select-wrapper" class="hidden" style="text-align: center; margin-top: 10px;">
+      <select id="page-select">
+        <option value="profile-page">Profil</option>
+        <option value="pets-page">Meine Tiere</option>
+        <option value="search-page">Suchen</option>
+        <option value="chat-page">Chat</option>
+      </select>
+    </div>
+  </header>
 
   <!-- Login & Registrierung -->
   <section id="auth-section">
@@ -18,21 +31,11 @@
     <button id="signup-btn">Registrieren</button>
   </section>
 
-  <!-- Navigation -->
-  <div id="page-select" class="hidden">
-    <select>
-      <option value="profile-page">Profil</option>
-      <option value="pets-page">Meine Tiere</option>
-      <option value="search-page">Suchen</option>
-      <option value="chat-page">Chat</option>
-    </select>
-    <button id="logout-btn" class="hidden">Logout</button>
-  </div>
-
   <!-- Nachricht -->
   <div id="message-box" class="hidden"></div>
 
-  <!-- Seiten -->
+  <!-- Seiteninhalte -->
+
   <section id="profile-page" class="page hidden">
     <h2>Profil</h2>
     <input type="text" id="name" placeholder="Dein Name" />
