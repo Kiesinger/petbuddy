@@ -12,7 +12,8 @@ body {
   margin: 0;
   background-color: var(--bg);
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   min-height: 100vh;
   padding: 2rem;
 }
@@ -24,12 +25,6 @@ body {
   padding: 2rem;
   border-radius: var(--border-radius);
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
-}
-
-.logo {
-  width: 80px;
-  margin: 0 auto 1rem;
-  display: block;
 }
 
 h1, h2, h3 {
@@ -56,6 +51,7 @@ button {
   color: white;
   border: none;
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 button:hover {
@@ -63,7 +59,7 @@ button:hover {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 #message-box {
@@ -74,17 +70,10 @@ button:hover {
   border-radius: var(--border-radius);
 }
 
-.nav-dropdown {
-  margin-bottom: 1.5rem;
-  padding: 0.5rem;
-  font-size: 1rem;
-  border-radius: var(--border-radius);
-  border: 1px solid #ccc;
-  width: 100%;
-}
-
 .page {
   margin-top: 1rem;
+  width: 100%;
+  max-width: var(--max-width);
 }
 
 ul {
@@ -133,8 +122,7 @@ ul li img {
   background: darkred;
 }
 
-/* Neue Bereiche */
-
+/* Chat */
 #chat-messages {
   background: #f9f9f9;
   border: 1px solid #ccc;
@@ -153,9 +141,41 @@ ul li img {
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
+/* Filter-Ergebnisse */
 #filtered-list li {
   background: #eef;
   padding: 1rem;
   border-radius: var(--border-radius);
   margin-bottom: 0.5rem;
+}
+
+/* Navigation Dropdown */
+#page-select-wrapper {
+  text-align: center;
+  margin-top: 10px;
+}
+
+/* Logout Button oben rechts */
+#logout-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #ddd;
+  color: #333;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+#logout-btn:hover {
+  background-color: #bbb;
+}
+
+/* Profilbild Vorschau */
+#profile-preview {
+  max-width: 150px;
+  border-radius: 12px;
+  margin-top: 10px;
 }
