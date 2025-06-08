@@ -17,7 +17,6 @@ const chatSendBtn = document.getElementById('send-chat-btn');
 
 let currentUserId = null;
 let currentUserName = '';
-
 // --- Message ---
 function showMessage(msg) {
   const box = document.getElementById('message-box');
@@ -95,7 +94,6 @@ saveProfileBtn.addEventListener('click', async () => {
     populateFilterOptions();
   }
 });
-
 // --- Seitenwechsel ---
 pageSelect.addEventListener('change', () => {
   document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
@@ -163,7 +161,6 @@ async function loadUser() {
   populateFilterOptions();
   pollNewMessages();
 }
-
 // --- Profil laden ---
 async function loadProfile() {
   const user = (await supabaseClient.auth.getUser()).data.user;
@@ -238,32 +235,6 @@ async function populateFilterOptions() {
   });
 }
 
-// --- Anbieter filtern ---
-document.getElementById('apply-provider-filter').addEventListener('click', async () => {
-  const location = document.getElementById('provider-filter-location').value;
-  const petType = document.getElementById('provider-filter-pet-type').value;
-
-  const { data: sitters } = await supabaseClient.from('pets').select('*').eq('role', 'sitter');
-  const { data: profiles } = await supabaseClient.from('profiles').select('*');
-
-  const list = document.getElementById('sitters-list');
-  list.innerHTML = '';
-
-  sitters.forEach(sitter => {
-    const profile = profiles.find(p => p.user_id === sitter.owner_id);
-    const matchesLocation = !location || profile?.location === location;
-    const matchesType = !petType || sitter.pet_type === petType;
-    if (matchesLocation && matchesType) {
-      const li = document.createElement('li');
-      li.innerHTML = `<strong>${sitter.name}</strong> bietet Betreuung für ${sitter.pet_type}<br/>
-        ${sitter.description}<br/>
-        Verfügbar: ${profile?.available_from || '-'} bis ${profile?.available_to || '-'}<br/>
-        ${sitter.image_url ? `<img src="${sitter.image_url}" />` : ''}`;
-      list.appendChild(li);
-    }
-  });
-});
-
 // --- Suchende Nutzer laden ---
 async function loadUsers() {
   const { data: pets } = await supabaseClient.from('pets').select('*').eq('role', 'owner');
@@ -276,6 +247,26 @@ async function loadUsers() {
     const profile = profiles.find(p => p.user_id === pet.owner_id);
     const li = document.createElement('li');
     li.innerHTML = `<strong>${pet.name}</strong> sucht Betreuung für ${pet.pet_type}<br/>
+      ${pet.description}<br/>
+      Ort: ${profile?.location || '-'}<br/>
+      Verfügbar: ${profile?.available_from || '-'} bis ${profile?.available_to || '-'}<br/>
+      ${pet.image_url ? `<img src="${pet.image_url}" />` : ''}`;
+    list.appendChild(li);
+  });
+}
+
+// --- Anbieter laden ---
+async function loadSitters() {
+  const { data: pets } = await supabaseClient.from('pets').select('*').eq('role', 'sitter');
+  const { data: profiles } = await supabaseClient.from('profiles').select('*');
+
+  const list = document.getElementById('sitters-list');
+  list.innerHTML = '';
+
+  pets.forEach(pet => {
+    const profile = profiles.find(p => p.user_id === pet.owner_id);
+    const li = document.createElement('li');
+    li.innerHTML = `<strong>${pet.name}</strong> bietet Betreuung für ${pet.pet_type}<br/>
       ${pet.description}<br/>
       Ort: ${profile?.location || '-'}<br/>
       Verfügbar: ${profile?.available_from || '-'} bis ${profile?.available_to || '-'}<br/>
