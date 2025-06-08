@@ -163,6 +163,7 @@ async function loadUser() {
   populateFilterOptions();
   pollNewMessages();
 }
+
 // --- Profil laden ---
 async function loadProfile() {
   const user = (await supabaseClient.auth.getUser()).data.user;
@@ -318,14 +319,23 @@ function pollNewMessages() {
     if (other) await loadMessages(other);
   }, 5000);
 }
-// --- Suchende Nutzer anzeigen ---
-async function loadUsers() {
-  const { data: profiles } = await supabaseClient.from('profiles').select('*');
-  const list = document.getElementById('users-list');
+
+// --- Petbuddies ---
+async function loadBuddies() {
+  const { data } = await supabaseClient.from('profiles').select('*').neq('user_id', currentUserId);
+  const list = document.getElementById('buddies-list');
   list.innerHTML = '';
-  profiles.forEach(user => {
+  data.forEach(user => {
     const li = document.createElement('li');
     li.textContent = `${user.name || 'Unbekannt'} (${user.role || '-'}) aus ${user.location || '-'}`;
     list.appendChild(li);
   });
 }
+
+// --- Sessionprüfung ---
+window.addEventListener('DOMContentLoaded', async () => {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session && session.user) {
+    loadUser();
+  }
+});
